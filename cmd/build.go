@@ -53,16 +53,17 @@ func runBuild(verbose, dryRun bool) error {
 		}
 	}
 	fmt.Printf("Building with %d features\n", len(enabled))
+	featuresHash := featuresHash(enabled)
 	err = buildEnvoy(enabled, verbose, dryRun)
 	if err != nil {
 		return err
 	}
-	buildGlue(enabled)
-
-	err = publishEnvoy(verbose, dryRun, envoyHash(enabled))
+	err = publishEnvoy(verbose, dryRun, featuresHash)
 	if err != nil {
 		return err
 	}
+
+	buildGlue(enabled)
 	publishGlue()
 
 	generateHelmChart()
@@ -90,7 +91,11 @@ func buildEnvoy(features []feature.Feature, verbose, dryRun bool) error {
 		"run", "-i", "--rm", "-v", pwd + ":/source",
 		"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
 	}
-	return runCmd(verbose, dryRun, "docker", args...)
+	err = runCmd(verbose, dryRun, "docker", args...)
+	if err != nil {
+		return errors.Wrap(err, "unable to build envoy")
+	}
+	return nil
 }
 
 func generateFromTemplate(features []feature.Feature, filename string, t *template.Template) error {
@@ -135,8 +140,13 @@ func publishEnvoy(verbose, dryRun bool, hash string) error {
 		"build",
 		"-f", "Dockerfile.envoy",
 		"-t", "envoy:" + hash,
+		".",
 	}
-	return runCmd(verbose, dryRun, "docker", args...)
+	err = runCmd(verbose, dryRun, "docker", args...)
+	if err != nil {
+		return errors.Wrap(err, "unable to publish envoy")
+	}
+	return nil
 }
 
 func publishGlue() error {
@@ -162,9 +172,9 @@ func writeFile(filename, content string) error {
 	return nil
 }
 
-// envoyHash generates a hash for particular envoy build
+// featuresHash generates a hash for particular envoy and glue build
 // based on the features included
-func envoyHash(features []feature.Feature) string {
+func featuresHash(features []feature.Feature) string {
 	hash := sha256.New()
 	for _, f := range features {
 		hash.Write([]byte(f.Name))
