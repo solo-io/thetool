@@ -4,6 +4,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 )
 
@@ -83,21 +84,17 @@ func init() {
 }
 
 func path(f feature.Feature) string {
+	if strings.HasSuffix(f.Repository, ".git") {
+		return "external/" + downloader.RepoDir(f.Repository) + "/envoy"
+	}
+
 	if isGitHubHTTP(f.Repository) {
 		return "external/" + f.Name + "-" + f.Version + "/envoy"
 	}
 
-	return "external/" + repoDir(f.Repository) + "/envoy"
+	return "external/" + downloader.RepoDir(f.Repository) + "/envoy"
 }
 
 func isGitHubHTTP(url string) bool {
 	return strings.HasPrefix(url, "https://github.com/")
-}
-
-func repoDir(remoteURL string) string {
-	repo := remoteURL[strings.LastIndex(remoteURL, "/")+1:]
-	if strings.HasSuffix(repo, ".git") {
-		return repo[:len(repo)-len(".git")]
-	}
-	return repo
 }

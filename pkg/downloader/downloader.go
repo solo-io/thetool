@@ -29,12 +29,17 @@ rm -rf '{{.repoDir}}'
 git clone '{{.remote}}' '{{.repoDir}}'
 cd '{{.repoDir}}'
 git reset --hard {{.ref}} || (git fetch origin {{.ref}}:{{.ref}} && git reset --hard {{.ref}})
-git clean -xdf )
+git clean -xdf 
+git submodule update --init --checkout --force )
 `))
 )
 
 // Download fetches the feature from its repository and saves it to the folder
 func Download(f feature.Feature, folder string, verbose bool) error {
+	if strings.HasSuffix(f.Repository, ".git") {
+		return withGit(f.Repository, f.Version, folder, verbose)
+	}
+
 	if strings.HasPrefix(f.Repository, "http") {
 		source := handleGitHub(f.Repository, f.Version)
 		srcURL, err := url.Parse(source)
@@ -51,7 +56,7 @@ func Download(f feature.Feature, folder string, verbose bool) error {
 		return expand(folder, filename)
 	}
 
-	return withGit(f.Repository, f.Version, folder, verbose)
+	return fmt.Errorf("unsupported repository scheme %s", f.Repository)
 }
 
 func withHTTP(url, destination string) error {
@@ -76,14 +81,10 @@ func withHTTP(url, destination string) error {
 
 // withGit - uses Git SSH to download the repository
 func withGit(url, commit, folder string, verbose bool) error {
-	if strings.Index(url, "@") <= 0 && !strings.HasPrefix(url, "ssh://") {
-		return fmt.Errorf("unsupported repository URL %s", url)
-	}
-
 	var out bytes.Buffer
 	data := map[string]string{
 		"workDir": folder,
-		"repoDir": repoDir(url),
+		"repoDir": RepoDir(url),
 		"remote":  url,
 		"ref":     commit,
 	}
@@ -184,10 +185,11 @@ func expand(folder, filename string) error {
 	return nil
 }
 
-func repoDir(remoteURL string) string {
+func RepoDir(remoteURL string) string {
 	repo := remoteURL[strings.LastIndex(remoteURL, "/")+1:]
-	if strings.HasSuffix(repo, ".git") {
-		return repo[:len(repo)-len(".git")]
+	ext := filepath.Ext(repo)
+	if ext != "" {
+		return repo[:len(repo)-len(ext)]
 	}
 	return repo
 }
