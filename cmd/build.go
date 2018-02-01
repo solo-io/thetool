@@ -29,19 +29,24 @@ cp -f bazel-bin/envoy .
 func BuildCmd() *cobra.Command {
 	var verbose bool
 	var dryRun bool
+	var dockerUser string
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "build the universe",
 		RunE: func(c *cobra.Command, args []string) error {
-			return runBuild(verbose, dryRun)
+			return runBuild(verbose, dryRun, dockerUser)
 		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "show verbose build log")
 	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "dry run; only generate build file")
+	cmd.PersistentFlags().StringVarP(&dockerUser, "docker-user", "u", "", "Docker user for publishing images")
 	return cmd
 }
 
-func runBuild(verbose, dryRun bool) error {
+func runBuild(verbose, dryRun bool, dockerUser string) error {
+	if !dryRun && dockerUser == "" {
+		return fmt.Errorf("need Docker user ID to publish images")
+	}
 	features, err := feature.LoadFromFile("features.json")
 	if err != nil {
 		return err
@@ -58,7 +63,7 @@ func runBuild(verbose, dryRun bool) error {
 	if err != nil {
 		return err
 	}
-	err = publishEnvoy(verbose, dryRun, featuresHash)
+	err = publishEnvoy(verbose, dryRun, featuresHash, dockerUser)
 	if err != nil {
 		return err
 	}
@@ -128,7 +133,7 @@ func buildGlue(features []feature.Feature) error {
 	return fmt.Errorf("not implemented")
 }
 
-func publishEnvoy(verbose, dryRun bool, hash string) error {
+func publishEnvoy(verbose, dryRun bool, hash, user string) error {
 	fmt.Println("Publishing Envoy...")
 
 	err := writeFile("Dockerfile.envoy", dockerfile)
@@ -136,15 +141,24 @@ func publishEnvoy(verbose, dryRun bool, hash string) error {
 		return err
 	}
 
-	args := []string{
+	buildArgs := []string{
 		"build",
 		"-f", "Dockerfile.envoy",
-		"-t", "envoy:" + hash,
+		"-t", user + "/envoy:" + hash,
 		".",
 	}
-	err = runCmd(verbose, dryRun, "docker", args...)
+	err = runCmd(verbose, dryRun, "docker", buildArgs...)
 	if err != nil {
-		return errors.Wrap(err, "unable to publish envoy")
+		return errors.Wrap(err, "unable to create envoy image")
+	}
+
+	pushArgs := []string{
+		"push",
+		user + "/envoy:" + hash,
+	}
+	err = runCmd(verbose, dryRun, "docker", pushArgs...)
+	if err != nil {
+		return errors.Wrap(err, "unable to push envoy image")
 	}
 	return nil
 }
