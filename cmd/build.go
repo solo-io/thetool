@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sync"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -59,19 +60,28 @@ func runBuild(verbose, dryRun bool, dockerUser string) error {
 	}
 	fmt.Printf("Building with %d features\n", len(enabled))
 	featuresHash := featuresHash(enabled)
-	err = buildEnvoy(enabled, verbose, dryRun)
-	if err != nil {
-		return err
-	}
-	err = publishEnvoy(verbose, dryRun, featuresHash, dockerUser)
-	if err != nil {
-		return err
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		if err := buildEnvoy(enabled, verbose, dryRun); err != nil {
+			fmt.Println(err)
+			return
+		}
+		if err := publishEnvoy(verbose, dryRun, featuresHash, dockerUser); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}()
 
-	buildGlue(enabled)
-	publishGlue()
+	go func() {
+		defer wg.Done()
+		buildGlue(enabled)
+		publishGlue()
+	}()
 
 	generateHelmValues(verbose, featuresHash, dockerUser)
+	wg.Wait()
 	return nil
 }
 

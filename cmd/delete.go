@@ -28,9 +28,10 @@ func runDelete(featureToRemove string) error {
 	if featureToRemove == "" {
 		return fmt.Errorf("name of the feature to remove can't be empty")
 	}
-	existing, err := feature.LoadFromFile("features.json")
+	existing, err := feature.LoadFromFile(dataFile)
 	if err != nil {
-		return err
+		fmt.Printf("Unable to load existing features: %q\n", err)
+		return nil
 	}
 	var updated []feature.Feature
 	for _, f := range existing {
@@ -40,8 +41,13 @@ func runDelete(featureToRemove string) error {
 	}
 
 	if len(updated) == len(existing) {
-		return fmt.Errorf("didn't find feature %s", featureToRemove)
+		fmt.Printf("Didn't find feature %s\n", featureToRemove)
+		return nil
 	}
 
-	return feature.SaveToFile(updated, "features.json")
+	err = feature.SaveToFile(updated, dataFile)
+	if err != nil {
+		fmt.Printf("Unable to update feature list: %q\n", err)
+	}
+	return nil
 }

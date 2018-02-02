@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -11,14 +11,14 @@ func CleanCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "clean",
 		Short: "clean up files and directory",
-		RunE: func(c *cobra.Command, args []string) error {
-			return runClean()
+		Run: func(c *cobra.Command, args []string) {
+			runClean()
 		},
 	}
 	return cmd
 }
 
-func runClean() error {
+func runClean() {
 	toDelete := []string{
 		"BUILD", "WORKSPACE", "Dockerfile.envoy", "envoy",
 		"build.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
@@ -27,8 +27,9 @@ func runClean() error {
 
 	for _, f := range toDelete {
 		if err := os.Remove(f); err != nil {
-			return errors.Wrap(err, "unable to delete "+f)
+			if !os.IsNotExist(err) {
+				fmt.Printf("Unable to delete %v: %q\n", f, err)
+			}
 		}
 	}
-	return nil
 }

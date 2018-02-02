@@ -47,22 +47,29 @@ func runAdd(name, repo, hash string, verbose bool) error {
 		Repository: repo,
 		Enabled:    true,
 	}
-	existing, err := feature.LoadFromFile("features.json")
+	existing, err := feature.LoadFromFile(dataFile)
 	if err != nil {
-		return err
+		fmt.Printf("Unable to load feature list: %q\n", err)
+		return nil
 	}
 
 	// check it isn't already existing feature
 	for _, e := range existing {
 		if e.Name == name {
-			return fmt.Errorf("feature %s already added", name)
+			fmt.Printf("Feature %s already exists\n", name)
+			return nil
 		}
 	}
 	// let's get the external dependency
-	err = downloader.Download(f, "external", verbose)
+	err = downloader.Download(f, repositoryDir, verbose)
 	if err != nil {
-		return err
+		fmt.Printf("Unable to download repository %s: %q\n", f.Repository, err)
+		return nil
 	}
 
-	return feature.SaveToFile(append(existing, f), "features.json")
+	err = feature.SaveToFile(append(existing, f), "features.json")
+	if err != nil {
+		fmt.Printf("Unable to save feature %s: %q\n", f.Name, err)
+	}
+	return nil
 }

@@ -11,17 +11,18 @@ func ListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list all registered features",
-		RunE: func(c *cobra.Command, args []string) error {
-			return runList()
+		Run: func(c *cobra.Command, args []string) {
+			runList()
 		},
 	}
 	return cmd
 }
 
-func runList() error {
-	features, err := feature.LoadFromFile("features.json")
+func runList() {
+	features, err := feature.LoadFromFile(dataFile)
 	if err != nil {
-		return err
+		fmt.Printf("Unable to load feature list: %q\n", err)
+		return
 	}
 
 	for _, f := range features {
@@ -31,5 +32,4 @@ func runList() error {
 		fmt.Println("Enabled:    ", f.Enabled)
 		fmt.Println("")
 	}
-	return nil
 }
