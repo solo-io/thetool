@@ -30,6 +30,12 @@ func ListDefaultFeatures() []Feature {
 			Repository: "https://github.com/axhixh/echo.git",
 			Enabled:    true,
 		},
+		Feature{
+			Name:       "lambda",
+			Version:    "9aeb7747286c9116d9f531f7cc2c3331a8a23c7f",
+			Repository: "git@github.com:solo-io/glue-lambda.git",
+			Enabled:    true,
+		},
 	}
 }
 

@@ -41,7 +41,7 @@ bind(
     actual = "//external:ssl",
 )
 
-ENVOY_SHA = "cb132c193630a5f7522a7efdf50e292dfa7f59b6"
+ENVOY_SHA = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-" + ENVOY_SHA,
@@ -65,8 +65,11 @@ proto_register_toolchains()
 `
 
 	dockerfile = `FROM ubuntu:16.04
+
 ADD WORKSPACE /etc/envoy.WORKSPACE
-ADD envoy /usr/local/bin/envoy`
+ADD envoy /usr/local/bin/envoy
+
+CMD /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster $CLUSTER --service-node $NODE`
 )
 
 var (
