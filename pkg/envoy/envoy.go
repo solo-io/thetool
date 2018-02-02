@@ -55,7 +55,7 @@ func Build(features []feature.Feature, verbose, dryRun bool) error {
 func Publish(verbose, dryRun bool, hash, user string) error {
 	fmt.Println("Publishing Envoy...")
 
-	err := ioutil.WriteFile("Dockerfile.envoy", []byte(dockerfile), 644)
+	err := ioutil.WriteFile("Dockerfile.envoy", []byte(dockerfile), 0644)
 	if err != nil {
 		return err
 	}

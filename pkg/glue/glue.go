@@ -14,13 +14,15 @@ var (
 
 func Build(verbose, dryRun bool, features []feature.Feature) error {
 	fmt.Println("Building Glue...")
-	f := feature.Feature{
-		Name:       "glue",
-		Repository: "https://github.com/solo-io/glue.git",
-		Version:    "5309cb36385555b7c2d5278fc230b2b27d8a0787",
-	}
-	if err := downloader.Download(f, RepositoryDirectory, verbose); err != nil {
-		return errors.Wrap(err, "unable to download glue repository")
+	if !dryRun {
+		f := feature.Feature{
+			Name:       "glue",
+			Repository: "https://github.com/solo-io/glue.git",
+			Version:    "5309cb36385555b7c2d5278fc230b2b27d8a0787",
+		}
+		if err := downloader.Download(f, RepositoryDirectory, verbose); err != nil {
+			return errors.Wrap(err, "unable to download glue repository")
+		}
 	}
 
 	// what about plugins from features?
