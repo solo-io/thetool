@@ -70,11 +70,24 @@ ADD WORKSPACE /etc/envoy.WORKSPACE
 ADD envoy /usr/local/bin/envoy
 
 CMD /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster $CLUSTER --service-node $NODE`
+
+	helmValuesContent = `#custom values for Glue Helm chart
+#gateway
+gw:
+  type: NodePort
+  replicaCount: 1
+  port: 80
+  image: "{{ .EnvoyImage }}"
+  imageTag: {{ .EnvoyTag }}
+  serviceCluster: cluster
+  serviceNode: node
+`
 )
 
 var (
-	buildTemplate     *template.Template
-	workspaceTemplate *template.Template
+	buildTemplate      *template.Template
+	workspaceTemplate  *template.Template
+	helmValuesTemplate *template.Template
 )
 
 func init() {
@@ -84,6 +97,7 @@ func init() {
 	}
 	workspaceTemplate = template.Must(template.New("workspace").
 		Funcs(funcMap).Parse(workspaceContent))
+	helmValuesTemplate = template.Must(template.New("helm").Parse(helmValuesContent))
 }
 
 func path(f feature.Feature) string {
