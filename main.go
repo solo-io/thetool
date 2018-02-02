@@ -19,6 +19,7 @@ func main() {
 	rootCmd.AddCommand(cmd.EnableCmd())
 	rootCmd.AddCommand(cmd.DisableCmd())
 	rootCmd.AddCommand(cmd.BuildCmd())
+	rootCmd.AddCommand(cmd.CleanCmd())
 
 	rootCmd.Execute()
 }

@@ -8,6 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	dataFile      = "features.json"
+	repositoryDir = "external"
+)
+
 // InitCmd initialize current directory for thetool
 func InitCmd() *cobra.Command {
 	var verbose bool
@@ -25,20 +30,20 @@ func InitCmd() *cobra.Command {
 func runInit(verbose bool) error {
 	fmt.Println("Initializing current directory...")
 	// check if this directory is already initialized
-	if _, err := os.Stat("features.json"); err == nil {
+	if _, err := os.Stat(dataFile); err == nil {
 		// TODO(ashish) check it is thetool file
 		return fmt.Errorf("thetool already initialized")
 	}
 	// create directory for external feature repositories
-	if _, err := os.Stat("external"); os.IsNotExist(err) {
-		err = os.Mkdir("external", 0755)
+	if _, err := os.Stat(repositoryDir); os.IsNotExist(err) {
+		err = os.Mkdir(repositoryDir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 
 	fmt.Println("Adding default features...")
-	if err := feature.SaveToFile([]feature.Feature{}, "features.json"); err != nil {
+	if err := feature.SaveToFile([]feature.Feature{}, dataFile); err != nil {
 		return err
 	}
 	// get list of available filters
