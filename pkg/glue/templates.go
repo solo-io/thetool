@@ -8,7 +8,7 @@ set -ex
 cd $GOPATH
 mkdir -p -v src/github.com/solo-io
 cd src/github.com/solo-io
-ln -s /glue/external/glue .
+ln -s /glue/%s/glue .
 cd glue
 pwd
 

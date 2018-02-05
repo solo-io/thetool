@@ -3,11 +3,15 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/spf13/cobra"
 )
 
+// AddCmd adds the provided feature to feature list and enables it.
+// Ading a feature checkes out the code from given repository for the
+// given commit hash
 func AddCmd() *cobra.Command {
 	var featureName string
 	var featureRepository string
@@ -60,14 +64,19 @@ func runAdd(name, repo, hash string, verbose bool) error {
 			return nil
 		}
 	}
+	conf, err := config.Load(config.ConfigFile)
+	if err != nil {
+		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
+		return nil
+	}
 	// let's get the external dependency
-	err = downloader.Download(f, repositoryDir, verbose)
+	err = downloader.Download(f, conf.WorkDir, verbose)
 	if err != nil {
 		fmt.Printf("Unable to download repository %s: %q\n", f.Repository, err)
 		return nil
 	}
 
-	err = feature.SaveToFile(append(existing, f), "features.json")
+	err = feature.SaveToFile(append(existing, f), dataFile)
 	if err != nil {
 		fmt.Printf("Unable to save feature %s: %q\n", f.Name, err)
 	}

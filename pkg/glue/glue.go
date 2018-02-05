@@ -11,13 +11,10 @@ import (
 	"github.com/solo-io/thetool/pkg/util"
 )
 
-var (
-	RepositoryDirectory = "external"
-)
-
-func Build(verbose, dryRun bool, features []feature.Feature) error {
+func Build(features []feature.Feature, verbose, dryRun bool, glueHash, workDir string) error {
 	fmt.Println("Building Glue...")
-	if err := ioutil.WriteFile("build-glue.sh", []byte(buildScript), 0755); err != nil {
+	script := fmt.Sprintf(buildScript, workDir)
+	if err := ioutil.WriteFile("build-glue.sh", []byte(script), 0755); err != nil {
 		return errors.Wrap(err, "unable to write build script")
 	}
 
@@ -25,9 +22,9 @@ func Build(verbose, dryRun bool, features []feature.Feature) error {
 		f := feature.Feature{
 			Name:       "glue",
 			Repository: "https://github.com/solo-io/glue.git",
-			Version:    "5309cb36385555b7c2d5278fc230b2b27d8a0787",
+			Version:    glueHash,
 		}
-		if err := downloader.Download(f, RepositoryDirectory, verbose); err != nil {
+		if err := downloader.Download(f, workDir, verbose); err != nil {
 			return errors.Wrap(err, "unable to download glue repository")
 		}
 	}

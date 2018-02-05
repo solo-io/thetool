@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/envoy"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/glue"
@@ -51,10 +52,18 @@ func BuildCmd() *cobra.Command {
 }
 
 func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
-	if !dryRun && dockerUser == "" {
+	conf, err := config.Load(config.ConfigFile)
+	if err != nil {
+		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
+		return nil
+	}
+	if dockerUser == "" {
+		dockerUser = conf.DockerUser
+	}
+	if dockerUser == "" {
 		return fmt.Errorf("need Docker user ID to publish images")
 	}
-	features, err := feature.LoadFromFile("features.json")
+	features, err := feature.LoadFromFile(dataFile)
 	if err != nil {
 		return err
 	}
@@ -73,8 +82,7 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		if target != componentAll && target != componentEnvoy {
 			return
 		}
-		envoy.RepositoryDirectory = repositoryDir
-		if err := envoy.Build(enabled, verbose, dryRun); err != nil {
+		if err := envoy.Build(enabled, verbose, dryRun, conf.EnvoyHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -89,8 +97,7 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		if target != componentAll && target != componentGlue {
 			return
 		}
-		glue.RepositoryDirectory = repositoryDir
-		if err := glue.Build(verbose, dryRun, enabled); err != nil {
+		if err := glue.Build(enabled, verbose, dryRun, conf.GlueHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}

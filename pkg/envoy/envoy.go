@@ -24,8 +24,10 @@ cp -f bazel-bin/envoy .
 `
 )
 
-func Build(features []feature.Feature, verbose, dryRun bool) error {
+func Build(features []feature.Feature, verbose, dryRun bool, eHash, wDir string) error {
 	fmt.Println("Building Envoy...")
+	envoyHash = eHash
+	workDir = wDir
 	// TODO(ashish) for each filter make sure we
 	// have Envoy filter to build
 	if err := generateFromTemplate(features, buildFile, buildTemplate); err != nil {

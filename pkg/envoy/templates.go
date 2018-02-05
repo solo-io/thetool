@@ -42,11 +42,10 @@ bind(
     actual = "//external:ssl",
 )
 
-ENVOY_SHA = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
 http_archive(
     name = "envoy",
-    strip_prefix = "envoy-" + ENVOY_SHA,
-    url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA + ".zip",
+    strip_prefix = "envoy-{{ envoyHash }}",
+    url = "https://github.com/envoyproxy/envoy/archive/{{ envoyHash }}.zip",
 )
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
@@ -74,15 +73,18 @@ CMD /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster $CLUSTER --service
 )
 
 var (
-	buildTemplate       *template.Template
-	workspaceTemplate   *template.Template
-	RepositoryDirectory = "external"
+	buildTemplate     *template.Template
+	workspaceTemplate *template.Template
+
+	envoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
+	workDir   = "repositories"
 )
 
 func init() {
 	buildTemplate = template.Must(template.New("build").Parse(buildContent))
 	funcMap := template.FuncMap{
-		"path": path,
+		"path":      path,
+		"envoyHash": func() string { return envoyHash },
 	}
 	workspaceTemplate = template.Must(template.New("workspace").
 		Funcs(funcMap).Parse(workspaceContent))
@@ -90,14 +92,14 @@ func init() {
 
 func path(f feature.Feature) string {
 	if strings.HasSuffix(f.Repository, ".git") {
-		return fmt.Sprintf("%s/%s/envoy", RepositoryDirectory, downloader.RepoDir(f.Repository))
+		return fmt.Sprintf("%s/%s/envoy", workDir, downloader.RepoDir(f.Repository))
 	}
 
 	if isGitHubHTTP(f.Repository) {
-		return fmt.Sprintf("%s/%s-%s/envoy", RepositoryDirectory, f.Name, f.Version)
+		return fmt.Sprintf("%s/%s-%s/envoy", workDir, f.Name, f.Version)
 	}
 
-	return fmt.Sprintf("%s/%s/envoy", RepositoryDirectory, downloader.RepoDir(f.Repository))
+	return fmt.Sprintf("%s/%s/envoy", workDir, downloader.RepoDir(f.Repository))
 }
 
 func isGitHubHTTP(url string) bool {
