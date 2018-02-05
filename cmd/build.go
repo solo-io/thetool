@@ -4,14 +4,22 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
-	"github.com/solo-io/thetool/pkg/envoy"
-	"github.com/solo-io/thetool/pkg/glue"
-
 	"github.com/pkg/errors"
+	"github.com/solo-io/thetool/pkg/envoy"
 	"github.com/solo-io/thetool/pkg/feature"
+	"github.com/solo-io/thetool/pkg/glue"
 	"github.com/spf13/cobra"
+)
+
+type component int
+
+const (
+	componentAll component = iota
+	componentEnvoy
+	componentGlue
 )
 
 func BuildCmd() *cobra.Command {
@@ -22,7 +30,18 @@ func BuildCmd() *cobra.Command {
 		Use:   "build",
 		Short: "build the universe",
 		RunE: func(c *cobra.Command, args []string) error {
-			return runBuild(verbose, dryRun, dockerUser)
+			target := componentAll
+			if len(args) > 0 {
+				switch strings.ToLower(args[0]) {
+				case "envoy":
+					target = componentEnvoy
+				case "glue":
+					target = componentGlue
+				default:
+					target = componentAll
+				}
+			}
+			return runBuild(verbose, dryRun, dockerUser, target)
 		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "show verbose build log")
@@ -31,7 +50,7 @@ func BuildCmd() *cobra.Command {
 	return cmd
 }
 
-func runBuild(verbose, dryRun bool, dockerUser string) error {
+func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 	if !dryRun && dockerUser == "" {
 		return fmt.Errorf("need Docker user ID to publish images")
 	}
@@ -51,6 +70,9 @@ func runBuild(verbose, dryRun bool, dockerUser string) error {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
+		if target != componentAll && target != componentEnvoy {
+			return
+		}
 		envoy.RepositoryDirectory = repositoryDir
 		if err := envoy.Build(enabled, verbose, dryRun); err != nil {
 			fmt.Println(err)
@@ -64,6 +86,9 @@ func runBuild(verbose, dryRun bool, dockerUser string) error {
 
 	go func() {
 		defer wg.Done()
+		if target != componentAll && target != componentGlue {
+			return
+		}
 		glue.RepositoryDirectory = repositoryDir
 		if err := glue.Build(verbose, dryRun, enabled); err != nil {
 			fmt.Println(err)

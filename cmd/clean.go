@@ -23,6 +23,7 @@ func runClean() {
 		"BUILD", "WORKSPACE", "Dockerfile.envoy", "envoy",
 		"build.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
 		"bazel-source", "bazel-testlogs", "glue-chart.yaml",
+		"Dockerfile.glue", "build-glue.sh", "glue",
 	}
 
 	for _, f := range toDelete {
