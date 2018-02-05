@@ -15,6 +15,13 @@ gw:
   imageTag: {{ .EnvoyTag }}
   serviceCluster: cluster
   serviceNode: node
+
+glue:
+  type: NodePort
+  replicaCount: 1
+  port: 80
+  image: "{{ .GlueImage }}"
+  imageTag: {{ .GlueTag }}"
 `
 )
 

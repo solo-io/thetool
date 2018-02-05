@@ -116,6 +116,8 @@ func generateHelmValues(verbose bool, featureHash, user string) error {
 	err = helmValuesTemplate.Execute(f, map[string]string{
 		"EnvoyImage": user + "/envoy",
 		"EnvoyTag":   featureHash,
+		"GlueImage":  user + "/glue",
+		"GlueTag":    featureHash,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)
