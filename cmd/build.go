@@ -134,5 +134,5 @@ func featuresHash(features []feature.Feature) string {
 		hash.Write([]byte(f.Version))
 	}
 
-	return fmt.Sprintf("%x", hash.Sum(nil))
+	return fmt.Sprintf("%x", hash.Sum(nil))[:8]
 }
