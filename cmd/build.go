@@ -22,6 +22,7 @@ const (
 func BuildCmd() *cobra.Command {
 	var verbose bool
 	var dryRun bool
+	var cache bool
 	var dockerUser string
 	cmd := &cobra.Command{
 		Use:       "build [target to build]",
@@ -42,16 +43,17 @@ func BuildCmd() *cobra.Command {
 			default:
 				target = componentAll
 			}
-			return runBuild(verbose, dryRun, dockerUser, target)
+			return runBuild(verbose, dryRun, cache, dockerUser, target)
 		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "show verbose build log")
 	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "dry run; only generate build file")
+	cmd.PersistentFlags().BoolVar(&cache, "cache", false, "use cache for builds")
 	cmd.PersistentFlags().StringVarP(&dockerUser, "docker-user", "u", "", "Docker user for publishing images")
 	return cmd
 }
 
-func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
+func runBuild(verbose, dryRun, cache bool, dockerUser string, target component) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
 		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
@@ -76,7 +78,7 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		if target != componentAll && target != componentEnvoy {
 			return
 		}
-		if err := envoy.Build(enabled, verbose, dryRun, conf.EnvoyHash, conf.WorkDir); err != nil {
+		if err := envoy.Build(enabled, verbose, dryRun, cache, conf.EnvoyHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -91,7 +93,7 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		if target != componentAll && target != componentGlue {
 			return
 		}
-		if err := glue.Build(enabled, verbose, dryRun, conf.GlueRepo, conf.GlueHash, conf.WorkDir); err != nil {
+		if err := glue.Build(enabled, verbose, dryRun, cache, conf.GlueRepo, conf.GlueHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}

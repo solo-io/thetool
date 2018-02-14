@@ -11,7 +11,7 @@ import (
 	"github.com/solo-io/thetool/pkg/util"
 )
 
-func Build(features []feature.Feature, verbose, dryRun bool, glueRepo, glueHash, workDir string) error {
+func Build(features []feature.Feature, verbose, dryRun, cache bool, glueRepo, glueHash, workDir string) error {
 	fmt.Println("Building Glue...")
 	script := fmt.Sprintf(buildScript, workDir)
 	if err := ioutil.WriteFile("build-glue.sh", []byte(script), 0755); err != nil {
@@ -27,6 +27,11 @@ func Build(features []feature.Feature, verbose, dryRun bool, glueRepo, glueHash,
 		if err := downloader.Download(f, workDir, verbose); err != nil {
 			return errors.Wrap(err, "unable to download glue repository")
 		}
+		if cache {
+			if err := os.MkdirAll("cache/glue", 0755); err != nil {
+				return errors.Wrap(err, "unable to create cache directory for glue")
+			}
+		}
 	}
 
 	// what about plugins from features?
@@ -36,9 +41,18 @@ func Build(features []feature.Feature, verbose, dryRun bool, glueRepo, glueHash,
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
 	}
-	args := []string{
-		"run", "-i", "--rm", "-v", pwd + ":/glue",
-		"golang:1.9", "/glue/build-glue.sh",
+	var args []string
+	if cache {
+		args = []string{
+			"run", "-i", "--rm", "-v", pwd + ":/glue",
+			"-v", pwd + "/cache/glue:/go/pkg/dep/sources",
+			"golang:1.9", "/glue/build-glue.sh",
+		}
+	} else {
+		args = []string{
+			"run", "-i", "--rm", "-v", pwd + ":/glue",
+			"golang:1.9", "/glue/build-glue.sh",
+		}
 	}
 	err = util.RunCmd(verbose, dryRun, "docker", args...)
 	if err != nil {

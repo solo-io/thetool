@@ -23,11 +23,11 @@ func runClean() {
 		"BUILD", "WORKSPACE", "Dockerfile.envoy", "envoy",
 		"build.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
 		"bazel-source", "bazel-testlogs", "glue-chart.yaml",
-		"Dockerfile.glue", "build-glue.sh", "glue",
+		"Dockerfile.glue", "build-glue.sh", "glue", "cache",
 	}
 
 	for _, f := range toDelete {
-		if err := os.Remove(f); err != nil {
+		if err := os.RemoveAll(f); err != nil {
 			if !os.IsNotExist(err) {
 				fmt.Printf("Unable to delete %v: %q\n", f, err)
 			}

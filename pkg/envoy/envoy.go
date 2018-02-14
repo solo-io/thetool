@@ -24,7 +24,7 @@ cp -f bazel-bin/envoy .
 `
 )
 
-func Build(features []feature.Feature, verbose, dryRun bool, eHash, wDir string) error {
+func Build(features []feature.Feature, verbose, dryRun, cache bool, eHash, wDir string) error {
 	fmt.Println("Building Envoy...")
 	envoyHash = eHash
 	workDir = wDir
@@ -38,14 +38,28 @@ func Build(features []feature.Feature, verbose, dryRun bool, eHash, wDir string)
 	}
 	// run build in docker
 	ioutil.WriteFile("build.sh", []byte(buildScript), 0755)
+	if cache {
+		if err := os.MkdirAll("cache/envoy", 0755); err != nil {
+			return errors.Wrap(err, "unable to create cache for envoy")
+		}
+	}
 	// docker run -t -i -v "$PWD":/source envoyproxy/envoy-build-ubuntu /bin/bash -lc "cd /source && bazel build -c dbg //:envoy"
 	pwd, err := os.Getwd()
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
 	}
-	args := []string{
-		"run", "-i", "--rm", "-v", pwd + ":/source",
-		"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
+	var args []string
+	if cache {
+		args = []string{
+			"run", "-i", "--rm", "-v", pwd + ":/source",
+			"-v", pwd + "/cache/envoy:/root/.cache/bazel",
+			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
+		}
+	} else {
+		args = []string{
+			"run", "-i", "--rm", "-v", pwd + ":/source",
+			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
+		}
 	}
 	err = util.RunCmd(verbose, dryRun, "docker", args...)
 	if err != nil {
