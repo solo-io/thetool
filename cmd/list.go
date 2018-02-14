@@ -24,7 +24,9 @@ func runList() {
 		fmt.Printf("Unable to load feature list: %q\n", err)
 		return
 	}
-
+	if len(features) == 0 {
+		fmt.Println("No features added yet!")
+	}
 	for _, f := range features {
 		fmt.Println("Name:       ", f.Name)
 		fmt.Println("Repository: ", f.Repository)

@@ -16,13 +16,14 @@ const (
 // InitCmd initialize current directory for thetool
 func InitCmd() *cobra.Command {
 	var verbose bool
+	var noDefaults bool
 	conf := config.Config{}
 
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "intialize the tool",
 		Run: func(c *cobra.Command, args []string) {
-			runInit(verbose, conf)
+			runInit(verbose, noDefaults, conf)
 		},
 	}
 	pflags := cmd.PersistentFlags()
@@ -31,10 +32,11 @@ func InitCmd() *cobra.Command {
 	pflags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", config.EnvoyHash, "Envoy commit hash to use")
 	pflags.StringVarP(&conf.GlueHash, "glue-hash", "g", config.GlueHash, "Glue commit hash to use")
 	pflags.StringVarP(&conf.DockerUser, "user", "u", config.DockerUser, "default Docker user")
+	pflags.BoolVar(&noDefaults, "no-defaults", false, "do not add default features")
 	return cmd
 }
 
-func runInit(verbose bool, conf config.Config) {
+func runInit(verbose, noDefaults bool, conf config.Config) {
 	fmt.Println("Initializing current directory...")
 	// check if this directory is already initialized
 	if _, err := os.Stat(dataFile); err == nil {
@@ -56,19 +58,20 @@ func runInit(verbose bool, conf config.Config) {
 		}
 	}
 
-	fmt.Println("Adding default features...")
 	if err := feature.SaveToFile([]feature.Feature{}, dataFile); err != nil {
 		fmt.Printf("Unable to save features file %s: %q\n", dataFile, err)
 		return
 	}
-	// get list of available filters
-	features := feature.ListDefaultFeatures()
-	for _, f := range features {
-		if err := runAdd(f.Name, f.Repository, f.Version, verbose); err != nil {
-			fmt.Printf("Error setting up default feature %s: %q\n", f.Name, err)
-			return
+	if !noDefaults {
+		fmt.Println("Adding default features...")
+		// get list of available filters
+		features := feature.ListDefaultFeatures()
+		for _, f := range features {
+			if err := runAdd(f.Name, f.Repository, f.Version, verbose); err != nil {
+				fmt.Printf("Error setting up default feature %s: %q\n", f.Name, err)
+				return
+			}
 		}
 	}
-
 	fmt.Println("Initialized.")
 }
