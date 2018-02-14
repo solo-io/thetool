@@ -34,6 +34,12 @@ git submodule update --init --checkout --force )
 `))
 )
 
+// Checks to see if the URL format is supported
+func SupportedURL(repoURL string) bool {
+	return strings.HasSuffix(repoURL, ".git") ||
+		strings.HasPrefix(repoURL, "http")
+}
+
 // Download fetches the feature from its repository and saves it to the folder
 func Download(f feature.Feature, folder string, verbose bool) error {
 	if strings.HasSuffix(f.Repository, ".git") {
@@ -56,7 +62,7 @@ func Download(f feature.Feature, folder string, verbose bool) error {
 		return expand(folder, filename)
 	}
 
-	return fmt.Errorf("unsupported repository scheme %s", f.Repository)
+	return fmt.Errorf("unsupported repository scheme %s\nShould either end in '.git' or be HTTP/S URL", f.Repository)
 }
 
 func withHTTP(url, destination string) error {

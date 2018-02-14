@@ -63,6 +63,10 @@ func runAdd(name, repo, hash string, verbose bool) error {
 		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
 		return nil
 	}
+	if !downloader.SupportedURL(f.Repository) {
+		fmt.Printf("Unsupported repository URL %s\nShould either end in '.git' or be HTTP/HTTPS", f.Repository)
+		return nil
+	}
 	// let's get the external dependency
 	err = downloader.Download(f, conf.WorkDir, verbose)
 	if err != nil {
