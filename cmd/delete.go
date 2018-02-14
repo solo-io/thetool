@@ -20,14 +20,12 @@ func DeleteCmd() *cobra.Command {
 			return runDelete(featureName)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.MarkFlagRequired("name")
 	return cmd
 }
 
 func runDelete(featureToRemove string) error {
-	if featureToRemove == "" {
-		return fmt.Errorf("name of the feature to remove can't be empty")
-	}
 	existing, err := feature.LoadFromFile(dataFile)
 	if err != nil {
 		fmt.Printf("Unable to load existing features: %q\n", err)

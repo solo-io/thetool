@@ -20,6 +20,7 @@ func main() {
 	rootCmd.AddCommand(cmd.DisableCmd())
 	rootCmd.AddCommand(cmd.BuildCmd())
 	rootCmd.AddCommand(cmd.CleanCmd())
+	rootCmd.AddCommand(cmd.DeployCmd())
 
 	rootCmd.Execute()
 }

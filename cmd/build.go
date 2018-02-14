@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"crypto/sha256"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/envoy"
-	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/glue"
 	"github.com/spf13/cobra"
 )
@@ -28,19 +24,23 @@ func BuildCmd() *cobra.Command {
 	var dryRun bool
 	var dockerUser string
 	cmd := &cobra.Command{
-		Use:   "build",
-		Short: "build the universe",
+		Use:       "build [target to build]",
+		Short:     "build the universe",
+		Long:      "build glue, envoy or all",
+		ValidArgs: []string{"envoy", "glue", "all"},
+		Args:      cobra.OnlyValidArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			target := componentAll
-			if len(args) > 0 {
-				switch strings.ToLower(args[0]) {
-				case "envoy":
-					target = componentEnvoy
-				case "glue":
-					target = componentGlue
-				default:
-					target = componentAll
-				}
+			if len(args) != 1 {
+				return fmt.Errorf("please specify a build target")
+			}
+			switch strings.ToLower(args[0]) {
+			case "envoy":
+				target = componentEnvoy
+			case "glue":
+				target = componentGlue
+			default:
+				target = componentAll
 			}
 			return runBuild(verbose, dryRun, dockerUser, target)
 		},
@@ -63,15 +63,9 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 	if dockerUser == "" {
 		return fmt.Errorf("need Docker user ID to publish images")
 	}
-	features, err := feature.LoadFromFile(dataFile)
+	enabled, err := loadEnabledFeatures()
 	if err != nil {
 		return err
-	}
-	var enabled []feature.Feature
-	for _, f := range features {
-		if f.Enabled {
-			enabled = append(enabled, f)
-		}
 	}
 	fmt.Printf("Building with %d features\n", len(enabled))
 	featuresHash := featuresHash(enabled)
@@ -107,39 +101,6 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		}
 	}()
 
-	generateHelmValues(verbose, featuresHash, dockerUser)
 	wg.Wait()
 	return nil
-}
-
-func generateHelmValues(verbose bool, featureHash, user string) error {
-	fmt.Println("Generating Helm Chart values...")
-	filename := "glue-chart.yaml"
-	f, err := os.Create(filename)
-	if err != nil {
-		return errors.Wrap(err, "unable to create file: "+filename)
-	}
-	defer f.Close()
-	err = helmValuesTemplate.Execute(f, map[string]string{
-		"EnvoyImage": user + "/envoy",
-		"EnvoyTag":   featureHash,
-		"GlueImage":  user + "/glue",
-		"GlueTag":    featureHash,
-	})
-	if err != nil {
-		return errors.Wrap(err, "unable to write file: "+filename)
-	}
-	return nil
-}
-
-// featuresHash generates a hash for particular envoy and glue build
-// based on the features included
-func featuresHash(features []feature.Feature) string {
-	hash := sha256.New()
-	for _, f := range features {
-		hash.Write([]byte(f.Name))
-		hash.Write([]byte(f.Version))
-	}
-
-	return fmt.Sprintf("%x", hash.Sum(nil))[:8]
 }

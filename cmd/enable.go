@@ -18,7 +18,8 @@ func EnableCmd() *cobra.Command {
 			return runChangeStatus(featureName, true)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.MarkFlagRequired("name")
 	return cmd
 }
 
@@ -33,14 +34,12 @@ func DisableCmd() *cobra.Command {
 			return runChangeStatus(featureName, false)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.MarkFlagRequired("name")
 	return cmd
 }
 
 func runChangeStatus(featureName string, status bool) error {
-	if featureName == "" {
-		return fmt.Errorf("name of the feature can't be empty")
-	}
 	existing, err := feature.LoadFromFile(dataFile)
 	if err != nil {
 		fmt.Printf("Unable to load feature list: %q\n", err)

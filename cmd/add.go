@@ -26,25 +26,19 @@ func AddCmd() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&featureName, "name", "n", "", "Feature name")
-	cmd.PersistentFlags().StringVarP(&featureRepository, "repository", "r", "", "Repository URL")
-	cmd.PersistentFlags().StringVarP(&featureHash, "commit", "c", "", "Commit hash")
-	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "Feature name")
+	cmd.Flags().StringVarP(&featureRepository, "repository", "r", "", "Repository URL")
+	cmd.Flags().StringVarP(&featureHash, "commit", "c", "", "Commit hash")
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+
+	cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("repository")
+	cmd.MarkFlagRequired("commit")
 
 	return cmd
 }
 
 func runAdd(name, repo, hash string, verbose bool) error {
-	if name == "" {
-		return fmt.Errorf("feature name can't be empty")
-	}
-	if repo == "" {
-		return fmt.Errorf("feature repository URL can't be empty")
-	}
-	if hash == "" {
-		return fmt.Errorf("feature commit hash can't be empty")
-	}
-
 	f := feature.Feature{
 		Name:       name,
 		Version:    hash,
