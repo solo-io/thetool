@@ -14,6 +14,8 @@ const (
 	EnvoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
 	// GlueHash is the commit hash of the version of Glue used
 	GlueHash = "5309cb36385555b7c2d5278fc230b2b27d8a0787"
+	// GlueRepo is the repository URL for Glue
+	GlueRepo = "https://github.com/solo-io/glue.git"
 	// DockerUser is the default Docker registry user used for publishing the images
 	DockerUser = "solo-io"
 	// ConfigFile is the name of the configuraiton file
@@ -25,6 +27,7 @@ type Config struct {
 	WorkDir    string `json:"workDir"`
 	EnvoyHash  string `json:"envoyHash"`
 	GlueHash   string `json:"glueHash"`
+	GlueRepo   string `json:"glueRepo"`
 	DockerUser string `json:"dockerUser,omitempty"`
 }
 

@@ -91,7 +91,7 @@ func runBuild(verbose, dryRun bool, dockerUser string, target component) error {
 		if target != componentAll && target != componentGlue {
 			return
 		}
-		if err := glue.Build(enabled, verbose, dryRun, conf.GlueHash, conf.WorkDir); err != nil {
+		if err := glue.Build(enabled, verbose, dryRun, conf.GlueRepo, conf.GlueHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}

@@ -31,6 +31,7 @@ func InitCmd() *cobra.Command {
 	pflags.StringVarP(&conf.WorkDir, "work-dir", "w", config.WorkDir, "working directory")
 	pflags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", config.EnvoyHash, "Envoy commit hash to use")
 	pflags.StringVarP(&conf.GlueHash, "glue-hash", "g", config.GlueHash, "Glue commit hash to use")
+	pflags.StringVar(&conf.GlueRepo, "glue-repo", config.GlueRepo, "Glue git repository")
 	pflags.StringVarP(&conf.DockerUser, "user", "u", config.DockerUser, "default Docker user")
 	pflags.BoolVar(&noDefaults, "no-defaults", false, "do not add default features")
 	return cmd

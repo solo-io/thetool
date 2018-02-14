@@ -11,7 +11,7 @@ import (
 	"github.com/solo-io/thetool/pkg/util"
 )
 
-func Build(features []feature.Feature, verbose, dryRun bool, glueHash, workDir string) error {
+func Build(features []feature.Feature, verbose, dryRun bool, glueRepo, glueHash, workDir string) error {
 	fmt.Println("Building Glue...")
 	script := fmt.Sprintf(buildScript, workDir)
 	if err := ioutil.WriteFile("build-glue.sh", []byte(script), 0755); err != nil {
@@ -21,7 +21,7 @@ func Build(features []feature.Feature, verbose, dryRun bool, glueHash, workDir s
 	if !dryRun {
 		f := feature.Feature{
 			Name:       "glue",
-			Repository: "https://github.com/solo-io/glue.git",
+			Repository: glueRepo,
 			Version:    glueHash,
 		}
 		if err := downloader.Download(f, workDir, verbose); err != nil {
