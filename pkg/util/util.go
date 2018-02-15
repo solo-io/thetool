@@ -68,11 +68,14 @@ func RunCmdContext(ctx context.Context, verbose, dryRun bool, binary string, arg
 }
 
 func DockerRun(verbose, dryRun bool, containerName string, args ...string) error {
-	ctx := dockerContext(containerName)
+	ctx, cancel := dockerContext(containerName)
+	if dryRun {
+		defer cancel()
+	}
 	return RunCmdContext(ctx, verbose, dryRun, "docker", args...)
 }
 
-func dockerContext(containerName string) context.Context {
+func dockerContext(containerName string) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func(name string) {
 		signalCh := make(chan os.Signal, 1)
@@ -86,7 +89,7 @@ func dockerContext(containerName string) context.Context {
 			return
 		}
 	}(containerName)
-	return ctx
+	return ctx, cancel
 }
 
 func stopContainer(name string) {
