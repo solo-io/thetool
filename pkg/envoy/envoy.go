@@ -95,6 +95,7 @@ func Publish(verbose, dryRun bool, hash, user string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to push envoy image")
 	}
+	fmt.Printf("Pushed Envoy image %s/envoy:%s\n", user, hash)
 	return nil
 }
 

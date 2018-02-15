@@ -83,5 +83,6 @@ func Publish(verbose, dryRun bool, hash, user string) error {
 	if err := util.RunCmd(verbose, dryRun, "docker", pushArgs...); err != nil {
 		return errors.Wrap(err, "unable to push glue image ")
 	}
+	fmt.Printf("Pushed Glue image %s/glue:%s\n", user, hash)
 	return nil
 }
