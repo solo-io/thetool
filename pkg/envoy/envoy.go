@@ -68,7 +68,7 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, eHash, wDir 
 	return nil
 }
 
-func Publish(verbose, dryRun bool, imageTag, user string) error {
+func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	fmt.Println("Publishing Envoy...")
 
 	err := ioutil.WriteFile("Dockerfile.envoy", []byte(dockerfile), 0644)
@@ -76,10 +76,11 @@ func Publish(verbose, dryRun bool, imageTag, user string) error {
 		return err
 	}
 
+	image := user + "/envoy:" + imageTag
 	buildArgs := []string{
 		"build",
 		"-f", "Dockerfile.envoy",
-		"-t", user + "/envoy:" + imageTag,
+		"-t", image,
 		".",
 	}
 	err = util.RunCmd(verbose, dryRun, "docker", buildArgs...)
@@ -87,15 +88,14 @@ func Publish(verbose, dryRun bool, imageTag, user string) error {
 		return errors.Wrap(err, "unable to create envoy image")
 	}
 
-	pushArgs := []string{
-		"push",
-		user + "/envoy:" + imageTag,
+	if publish {
+		pushArgs := []string{"push", image}
+		err = util.RunCmd(verbose, dryRun, "docker", pushArgs...)
+		if err != nil {
+			return errors.Wrap(err, "unable to push envoy image")
+		}
+		fmt.Printf("Pushed Envoy image %s\n", image)
 	}
-	err = util.RunCmd(verbose, dryRun, "docker", pushArgs...)
-	if err != nil {
-		return errors.Wrap(err, "unable to push envoy image")
-	}
-	fmt.Printf("Pushed Envoy image %s/envoy:%s\n", user, imageTag)
 	return nil
 }
 

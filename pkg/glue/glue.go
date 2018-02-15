@@ -61,14 +61,13 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, glueRepo, gl
 	return nil
 }
 
-func Publish(verbose, dryRun bool, imageTag, user string) error {
+func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	fmt.Println("Publishing Glue...")
 	if err := ioutil.WriteFile("Dockerfile.glue", []byte(dockerFile), 0644); err != nil {
 		return errors.Wrap(err, "unable to create Dockerfile")
 	}
 
 	tag := user + "/glue:" + imageTag
-
 	buildArgs := []string{
 		"build",
 		"-f", "Dockerfile.glue",
@@ -77,12 +76,12 @@ func Publish(verbose, dryRun bool, imageTag, user string) error {
 	if err := util.RunCmd(verbose, dryRun, "docker", buildArgs...); err != nil {
 		return errors.Wrap(err, "unable to create glue image")
 	}
-	pushArgs := []string{
-		"push", tag,
+	if publish {
+		pushArgs := []string{"push", tag}
+		if err := util.RunCmd(verbose, dryRun, "docker", pushArgs...); err != nil {
+			return errors.Wrap(err, "unable to push glue image ")
+		}
+		fmt.Printf("Pushed Glue image %s\n", tag)
 	}
-	if err := util.RunCmd(verbose, dryRun, "docker", pushArgs...); err != nil {
-		return errors.Wrap(err, "unable to push glue image ")
-	}
-	fmt.Printf("Pushed Glue image %s\n", tag)
 	return nil
 }
