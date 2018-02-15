@@ -49,20 +49,24 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, eHash, wDir 
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
 	}
+	name := "thetool-envoy"
 	var args []string
 	if cache {
 		args = []string{
-			"run", "-i", "--rm", "-v", pwd + ":/source",
+			"run", "-i", "--rm", "--name", name,
+			"-v", pwd + ":/source",
 			"-v", pwd + "/cache/envoy:/root/.cache/bazel",
 			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
 		}
 	} else {
 		args = []string{
-			"run", "-i", "--rm", "-v", pwd + ":/source",
+			"run", "-i", "--rm", "--name", name,
+			"-v", pwd + ":/source",
 			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
 		}
 	}
-	err = util.RunCmd(verbose, dryRun, "docker", args...)
+
+	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {
 		var msg string
 		if cache {

@@ -41,20 +41,21 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, glueRepo, gl
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
 	}
+	name := "thetool-gloo"
 	var args []string
 	if cache {
 		args = []string{
-			"run", "-i", "--rm", "-v", pwd + ":/glue",
+			"run", "-i", "--rm", "--name", name, "-v", pwd + ":/glue",
 			"-v", pwd + "/cache/glue:/go/pkg/dep/sources",
 			"golang:1.9", "/glue/build-glue.sh",
 		}
 	} else {
 		args = []string{
-			"run", "-i", "--rm", "-v", pwd + ":/glue",
+			"run", "-i", "--rm", "--name", name, "-v", pwd + ":/glue",
 			"golang:1.9", "/glue/build-glue.sh",
 		}
 	}
-	err = util.RunCmd(verbose, dryRun, "docker", args...)
+	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {
 		return errors.Wrap(err, "unable to build glue; consider running with verbose flag")
 	}

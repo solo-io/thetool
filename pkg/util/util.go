@@ -3,12 +3,21 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
+
+	"golang.org/x/net/context"
 
 	"github.com/pkg/errors"
 )
 
 func RunCmd(verbose, dryRun bool, binary string, args ...string) error {
+	return RunCmdContext(nil, verbose, dryRun, binary, args...)
+}
+
+func RunCmdContext(ctx context.Context, verbose, dryRun bool, binary string, args ...string) error {
 	if verbose {
 		fmt.Println(binary, args)
 	}
@@ -16,7 +25,12 @@ func RunCmd(verbose, dryRun bool, binary string, args ...string) error {
 		return nil
 	}
 
-	cmd := exec.Command(binary, args...)
+	var cmd *exec.Cmd
+	if ctx != nil {
+		cmd = exec.CommandContext(ctx, binary, args...)
+	} else {
+		cmd = exec.Command(binary, args...)
+	}
 	if verbose {
 		cmdStdout, err := cmd.StdoutPipe()
 		if err != nil {
@@ -51,4 +65,33 @@ func RunCmd(verbose, dryRun bool, binary string, args ...string) error {
 		return errors.Wrapf(err, "unable to run %s", binary)
 	}
 	return nil
+}
+
+func DockerRun(verbose, dryRun bool, containerName string, args ...string) error {
+	ctx := dockerContext(containerName)
+	return RunCmdContext(ctx, verbose, dryRun, "docker", args...)
+}
+
+func dockerContext(containerName string) context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func(name string) {
+		signalCh := make(chan os.Signal, 1)
+		signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
+		select {
+		case <-signalCh:
+			cancel()
+			stopContainer(name)
+		case <-ctx.Done():
+			return
+		}
+	}(containerName)
+	return ctx
+}
+
+func stopContainer(name string) {
+	err := RunCmd(false, false, "docker", "stop", name)
+	if err != nil {
+		fmt.Println("error stopping docker container ", name)
+	}
 }
