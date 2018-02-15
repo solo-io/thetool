@@ -56,7 +56,7 @@ func BuildCmd() *cobra.Command {
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "show verbose build log")
 	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "dry run; only generate build file")
-	cmd.PersistentFlags().BoolVar(&config.UseCache, "cache", false, "use cache for builds")
+	cmd.PersistentFlags().BoolVar(&config.UseCache, "cache", true, "use cache for builds")
 	cmd.PersistentFlags().BoolVarP(&config.PublishImages, "publish", "p", true, "publish Docker images to registry")
 	cmd.PersistentFlags().StringVarP(&config.ImageTag, "image-tag", "t", "", "tag for Docker images; uses auto-generated hash if empty")
 	cmd.PersistentFlags().StringVarP(&config.DockerUser, "docker-user", "u", "", "Docker user for publishing images")
@@ -79,7 +79,11 @@ func runBuild(verbose, dryRun bool, buildConfig BuildConfig, target component) e
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Building with %d features\n", len(enabled))
+	if buildConfig.PublishImages {
+		fmt.Printf("Building and publishing with %d features\n", len(enabled))
+	} else {
+		fmt.Printf("Building with %d features\n", len(enabled))
+	}
 	if buildConfig.ImageTag == "" {
 		buildConfig.ImageTag = featuresHash(enabled)
 	}

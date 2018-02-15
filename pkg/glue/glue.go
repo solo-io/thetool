@@ -56,7 +56,7 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, glueRepo, gl
 	}
 	err = util.RunCmd(verbose, dryRun, "docker", args...)
 	if err != nil {
-		return errors.Wrap(err, "unable to build glue")
+		return errors.Wrap(err, "unable to build glue; consider running with verbose flag")
 	}
 	return nil
 }

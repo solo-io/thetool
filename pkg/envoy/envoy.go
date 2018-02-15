@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/feature"
@@ -63,7 +64,13 @@ func Build(features []feature.Feature, verbose, dryRun, cache bool, eHash, wDir 
 	}
 	err = util.RunCmd(verbose, dryRun, "docker", args...)
 	if err != nil {
-		return errors.Wrap(err, "unable to build envoy")
+		var msg string
+		if cache {
+			msg = fmt.Sprintf("unable to build envoy; please look at %s for details", envoyBuildLog())
+		} else {
+			msg = "unable to build enovy; consider running in verbose mode"
+		}
+		return errors.Wrap(err, msg)
 	}
 	return nil
 }
@@ -110,4 +117,18 @@ func generateFromTemplate(features []feature.Feature, filename string, t *templa
 		return errors.Wrap(err, "unable to write file: "+filename)
 	}
 	return nil
+}
+
+func envoyBuildLog() string {
+	logFile := "command.log"
+	bazelDir := "cache/envoy/_bazel_root"
+	files, err := ioutil.ReadDir(bazelDir)
+	if err == nil {
+		for _, f := range files {
+			if f.Name() != "install" {
+				return filepath.Join(bazelDir, f.Name(), logFile)
+			}
+		}
+	}
+	return filepath.Join(bazelDir, "<hash>", logFile)
 }
