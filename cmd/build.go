@@ -24,6 +24,7 @@ func BuildCmd() *cobra.Command {
 	var dryRun bool
 	var cache bool
 	var dockerUser string
+	var imageTag string
 	cmd := &cobra.Command{
 		Use:       "build [target to build]",
 		Short:     "build the universe",
@@ -43,17 +44,18 @@ func BuildCmd() *cobra.Command {
 			default:
 				target = componentAll
 			}
-			return runBuild(verbose, dryRun, cache, dockerUser, target)
+			return runBuild(verbose, dryRun, cache, dockerUser, imageTag, target)
 		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "show verbose build log")
 	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "dry run; only generate build file")
 	cmd.PersistentFlags().BoolVar(&cache, "cache", false, "use cache for builds")
+	cmd.PersistentFlags().StringVarP(&imageTag, "image-tag", "t", "", "tag for Docker images; uses auto-generated hash if empty")
 	cmd.PersistentFlags().StringVarP(&dockerUser, "docker-user", "u", "", "Docker user for publishing images")
 	return cmd
 }
 
-func runBuild(verbose, dryRun, cache bool, dockerUser string, target component) error {
+func runBuild(verbose, dryRun, cache bool, dockerUser, imageTag string, target component) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
 		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
@@ -70,7 +72,10 @@ func runBuild(verbose, dryRun, cache bool, dockerUser string, target component) 
 		return err
 	}
 	fmt.Printf("Building with %d features\n", len(enabled))
-	featuresHash := featuresHash(enabled)
+	tag := imageTag
+	if tag == "" {
+		tag = featuresHash(enabled)
+	}
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
@@ -82,7 +87,7 @@ func runBuild(verbose, dryRun, cache bool, dockerUser string, target component) 
 			fmt.Println(err)
 			return
 		}
-		if err := envoy.Publish(verbose, dryRun, featuresHash, dockerUser); err != nil {
+		if err := envoy.Publish(verbose, dryRun, tag, dockerUser); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -98,7 +103,7 @@ func runBuild(verbose, dryRun, cache bool, dockerUser string, target component) 
 			return
 		}
 
-		if err := glue.Publish(verbose, dryRun, featuresHash, dockerUser); err != nil {
+		if err := glue.Publish(verbose, dryRun, tag, dockerUser); err != nil {
 			fmt.Println(err)
 		}
 	}()
