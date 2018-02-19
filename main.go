@@ -13,11 +13,12 @@ func main() {
 	}
 
 	rootCmd.AddCommand(cmd.InitCmd())
-	rootCmd.AddCommand(cmd.ListCmd())
+	rootCmd.AddCommand(cmd.ListReposCmd())
 	rootCmd.AddCommand(cmd.AddCmd())
 	rootCmd.AddCommand(cmd.DeleteCmd())
 	rootCmd.AddCommand(cmd.EnableCmd())
 	rootCmd.AddCommand(cmd.DisableCmd())
+	rootCmd.AddCommand(cmd.ListFeaturesCmd())
 	rootCmd.AddCommand(cmd.BuildCmd())
 	rootCmd.AddCommand(cmd.CleanCmd())
 	rootCmd.AddCommand(cmd.DeployCmd())

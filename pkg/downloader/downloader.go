@@ -17,7 +17,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"github.com/solo-io/thetool/pkg/feature"
 )
 
 var (
@@ -41,20 +40,20 @@ func SupportedURL(repoURL string) bool {
 }
 
 // Download fetches the feature from its repository and saves it to the folder
-func Download(f feature.Feature, folder string, verbose bool) error {
-	if strings.HasSuffix(f.Repository, ".git") {
-		return withGit(f.Repository, f.Version, folder, verbose)
+func Download(repoURL, commitHash, folder string, verbose bool) error {
+	if strings.HasSuffix(repoURL, ".git") {
+		return withGit(repoURL, commitHash, folder, verbose)
 	}
 
-	if strings.HasPrefix(f.Repository, "http") {
-		source := handleGitHub(f.Repository, f.Version)
+	if strings.HasPrefix(repoURL, "http") {
+		source := handleGitHub(repoURL, commitHash)
 		srcURL, err := url.Parse(source)
 		if err != nil {
 			return errors.Wrap(err, "invalid repository URL")
 		}
 		filename := path.Base(srcURL.Path)
 		destination := path.Join(folder, filename)
-		err = withHTTP(handleGitHub(f.Repository, f.Version), destination)
+		err = withHTTP(handleGitHub(repoURL, commitHash), destination)
 		if err != nil {
 			return err
 		}
@@ -62,7 +61,7 @@ func Download(f feature.Feature, folder string, verbose bool) error {
 		return expand(folder, filename)
 	}
 
-	return fmt.Errorf("unsupported repository scheme %s\nShould either end in '.git' or be HTTP/S URL", f.Repository)
+	return fmt.Errorf("unsupported repository scheme %s\nShould either end in '.git' or be HTTP/S URL", repoURL)
 }
 
 func withHTTP(url, destination string) error {

@@ -7,31 +7,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func ListCmd() *cobra.Command {
+func ListReposCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "list all registered features",
+		Use:   "list-repo",
+		Short: "list all registered Gloo repositories",
 		Run: func(c *cobra.Command, args []string) {
-			runList()
+			runListRepos()
 		},
 	}
 	return cmd
 }
 
-func runList() {
-	features, err := feature.LoadFromFile(dataFile)
+func runListRepos() {
+	store := &feature.FileRepoStore{Filename: feature.ReposFileName}
+	repos, err := store.List()
 	if err != nil {
-		fmt.Printf("Unable to load feature list: %q\n", err)
+		fmt.Printf("Unable to load repository list: %q\n", err)
 		return
 	}
-	if len(features) == 0 {
-		fmt.Println("No features added yet!")
+	if len(repos) == 0 {
+		fmt.Println("No repositories added yet!")
 	}
-	for _, f := range features {
-		fmt.Println("Name:       ", f.Name)
-		fmt.Println("Repository: ", f.Repository)
-		fmt.Println("Commit:     ", f.Version)
-		fmt.Println("Enabled:    ", f.Enabled)
+	for _, r := range repos {
+		fmt.Println("Repository: ", r.URL)
+		fmt.Println("Commit:     ", r.Commit)
 		fmt.Println("")
 	}
 }

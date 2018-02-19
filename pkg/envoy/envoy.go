@@ -25,12 +25,11 @@ cp -f bazel-bin/envoy .
 `
 )
 
-func Build(features []feature.Feature, verbose, dryRun, cache bool, eHash, wDir string) error {
+func Build(enabled []feature.Feature, verbose, dryRun, cache bool, eHash, wDir string) error {
 	fmt.Println("Building Envoy...")
 	envoyHash = eHash
 	workDir = wDir
-	// TODO(ashish) for each filter make sure we
-	// have Envoy filter to build
+	features := envoyFilters(enabled)
 	if err := generateFromTemplate(features, buildFile, buildTemplate); err != nil {
 		return err
 	}
@@ -135,4 +134,14 @@ func envoyBuildLog() string {
 		}
 	}
 	return filepath.Join(bazelDir, "<hash>", logFile)
+}
+
+func envoyFilters(enabled []feature.Feature) []feature.Feature {
+	out := []feature.Feature{}
+	for _, f := range enabled {
+		if f.EnvoyDir != "" {
+			out = append(out, f)
+		}
+	}
+	return out
 }

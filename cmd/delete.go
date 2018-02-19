@@ -7,45 +7,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	featureToRemove string
-)
-
 func DeleteCmd() *cobra.Command {
-	var featureName string
+	var repoURL string
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "remove a feature from feature list",
+		Short: "remove a Gloo feature repository",
 		RunE: func(c *cobra.Command, args []string) error {
-			return runDelete(featureName)
+			return runDelete(repoURL)
 		},
 	}
-	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
-	cmd.MarkFlagRequired("name")
+	cmd.Flags().StringVarP(&repoURL, "repository", "r", "", "URL of the repository to remove")
+	cmd.MarkFlagRequired("repository")
 	return cmd
 }
 
-func runDelete(featureToRemove string) error {
-	existing, err := feature.LoadFromFile(dataFile)
-	if err != nil {
-		fmt.Printf("Unable to load existing features: %q\n", err)
+func runDelete(repoURL string) error {
+	// remove features for the repo
+	featureStore := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	if err := featureStore.RemoveForRepo(repoURL); err != nil {
+		fmt.Printf("unable to remove features for repository %s: %q\n", repoURL, err)
 		return nil
 	}
-	var updated []feature.Feature
-	for _, f := range existing {
-		if featureToRemove != f.Name {
-			updated = append(updated, f)
-		}
+	// remove the repo
+	repoStore := &feature.FileRepoStore{Filename: feature.ReposFileName}
+	if err := repoStore.Remove(repoURL); err != nil {
+		fmt.Printf("Uable to remove repository %s: %q\n", repoURL, err)
 	}
 
-	if len(updated) == len(existing) {
-		fmt.Printf("Didn't find feature %s\n", featureToRemove)
-		return nil
-	}
-
-	err = feature.SaveToFile(updated, dataFile)
-	if err != nil {
-		fmt.Printf("Unable to update feature list: %q\n", err)
-	}
 	return nil
 }

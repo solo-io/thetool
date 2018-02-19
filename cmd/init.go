@@ -9,10 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	dataFile = "features.json"
-)
-
 // InitCmd initialize current directory for thetool
 func InitCmd() *cobra.Command {
 	var verbose bool
@@ -26,21 +22,21 @@ func InitCmd() *cobra.Command {
 			runInit(verbose, noDefaults, conf)
 		},
 	}
-	pflags := cmd.PersistentFlags()
-	pflags.BoolVarP(&verbose, "verbose", "v", false, "enable verbose logging")
-	pflags.StringVarP(&conf.WorkDir, "work-dir", "w", config.WorkDir, "working directory")
-	pflags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", config.EnvoyHash, "Envoy commit hash to use")
-	pflags.StringVarP(&conf.GlueHash, "glue-hash", "g", config.GlueHash, "Glue commit hash to use")
-	pflags.StringVar(&conf.GlueRepo, "glue-repo", config.GlueRepo, "Glue git repository")
-	pflags.StringVarP(&conf.DockerUser, "user", "u", config.DockerUser, "default Docker user")
-	pflags.BoolVar(&noDefaults, "no-defaults", false, "do not add default features")
+	flags := cmd.Flags()
+	flags.BoolVarP(&verbose, "verbose", "v", false, "enable verbose logging")
+	flags.StringVarP(&conf.WorkDir, "work-dir", "w", config.WorkDir, "working directory")
+	flags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", config.EnvoyHash, "Envoy commit hash to use")
+	flags.StringVarP(&conf.GlooHash, "gloo-hash", "g", config.GlooHash, "Gloo commit hash to use")
+	flags.StringVar(&conf.GlooRepo, "gloo-repo", config.GlooRepo, "Gloo git repository")
+	flags.StringVarP(&conf.DockerUser, "user", "u", config.DockerUser, "default Docker user")
+	flags.BoolVar(&noDefaults, "no-defaults", false, "do not add default features")
 	return cmd
 }
 
 func runInit(verbose, noDefaults bool, conf config.Config) {
 	fmt.Println("Initializing current directory...")
 	// check if this directory is already initialized
-	if _, err := os.Stat(dataFile); err == nil {
+	if _, err := os.Stat(feature.ReposFileName); err == nil {
 		fmt.Println("thetool already initialized")
 		return
 	}
@@ -59,17 +55,24 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 		}
 	}
 
-	if err := feature.SaveToFile([]feature.Feature{}, dataFile); err != nil {
-		fmt.Printf("Unable to save features file %s: %q\n", dataFile, err)
+	repoStore := feature.FileRepoStore{Filename: feature.ReposFileName}
+	if err := repoStore.Init(); err != nil {
+		fmt.Printf("Unable to initialize repositories file %s: %q\n", feature.ReposFileName, err)
+		return
+	}
+
+	featureStore := feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	if err := featureStore.Init(); err != nil {
+		fmt.Printf("Unable to initialize features file %s: %q\n", feature.FeaturesFileName, err)
 		return
 	}
 	if !noDefaults {
-		fmt.Println("Adding default features...")
-		// get list of available filters
-		features := feature.ListDefaultFeatures()
-		for _, f := range features {
-			if err := runAdd(f.Name, f.Repository, f.Version, verbose); err != nil {
-				fmt.Printf("Error setting up default feature %s: %q\n", f.Name, err)
+		fmt.Println("Adding default repositories...")
+		// get list of available repositories
+		repos := feature.ListDefaultRepos()
+		for _, r := range repos {
+			if err := runAdd(verbose, r.URL, r.Commit); err != nil {
+				fmt.Printf("Error setting up default repository %s: %q\n", r.URL, err)
 				return
 			}
 		}

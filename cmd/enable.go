@@ -40,25 +40,21 @@ func DisableCmd() *cobra.Command {
 }
 
 func runChangeStatus(featureName string, status bool) error {
-	existing, err := feature.LoadFromFile(dataFile)
+	store := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	existing, err := store.List()
 	if err != nil {
 		fmt.Printf("Unable to load feature list: %q\n", err)
 		return nil
 	}
-	found := false
 	for i, f := range existing {
 		if featureName == f.Name {
 			existing[i].Enabled = status
-			found = true
+			if err := store.Update(existing[i]); err != nil {
+				fmt.Printf("Unable to update feature %s\n", featureName)
+			}
+			return nil
 		}
 	}
-	if !found {
-		fmt.Printf("Unable to find feature %s\n", featureName)
-		return nil
-	}
-	err = feature.SaveToFile(existing, dataFile)
-	if err != nil {
-		fmt.Printf("Unable to save feature list: %q\n", err)
-	}
+	fmt.Printf("Unable to find feature %s\n", featureName)
 	return nil
 }

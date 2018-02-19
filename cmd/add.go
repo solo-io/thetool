@@ -2,81 +2,97 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/spf13/cobra"
 )
 
-// AddCmd adds the provided feature to feature list and enables it.
-// Ading a feature checkes out the code from given repository for the
-// given commit hash
+// AddCmd adds a Gloo feature repository at specific commit hash
+// It downloads and parses features.json and adds the features
+// listed in the file
 func AddCmd() *cobra.Command {
-	var featureName string
-	var featureRepository string
-	var featureHash string
+	var repoURL string
+	var commitHash string
 	var verbose bool
 
 	cmd := &cobra.Command{
 		Use:   "add",
-		Short: "add a feature",
-		RunE: func(c *cobra.Command, args []string) error {
-			return runAdd(featureName, featureRepository, featureHash, verbose)
+		Short: "add a Gloo feature repository",
+		Long:  "add a Gloo feature repository and all the features in the repository",
+		Run: func(c *cobra.Command, args []string) {
+			runAdd(verbose, repoURL, commitHash)
 		},
 	}
 
-	cmd.Flags().StringVarP(&featureName, "name", "n", "", "Feature name")
-	cmd.Flags().StringVarP(&featureRepository, "repository", "r", "", "Repository URL")
-	cmd.Flags().StringVarP(&featureHash, "commit", "c", "", "Commit hash")
-	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	flags := cmd.Flags()
+	flags.StringVarP(&repoURL, "repository", "r", "", "repository URL")
+	flags.StringVarP(&commitHash, "commit", "c", "", "commit hash")
+	flags.BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 
-	cmd.MarkFlagRequired("name")
 	cmd.MarkFlagRequired("repository")
 	cmd.MarkFlagRequired("commit")
 
 	return cmd
 }
 
-func runAdd(name, repo, hash string, verbose bool) error {
-	f := feature.Feature{
-		Name:       name,
-		Version:    hash,
-		Repository: repo,
-		Enabled:    true,
-	}
-	existing, err := feature.LoadFromFile(dataFile)
+func runAdd(verbose bool, repo, hash string) error {
+	repoStore := &feature.FileRepoStore{Filename: feature.ReposFileName}
+	existing, err := repoStore.List()
 	if err != nil {
-		fmt.Printf("Unable to load feature list: %q\n", err)
-		return nil
+		return errors.Wrap(err, "unable to load repositories")
 	}
 
 	// check it isn't already existing feature
 	for _, e := range existing {
-		if e.Name == name {
-			fmt.Printf("Feature %s already exists\n", name)
-			return nil
+		if e.URL == repo {
+			return fmt.Errorf("repository %s already exists\n", repo)
 		}
 	}
-	conf, err := config.Load(config.ConfigFile)
-	if err != nil {
-		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
-		return nil
-	}
-	if !downloader.SupportedURL(f.Repository) {
-		fmt.Printf("Unsupported repository URL %s\nShould either end in '.git' or be HTTP/HTTPS", f.Repository)
-		return nil
-	}
-	// let's get the external dependency
-	err = downloader.Download(f, conf.WorkDir, verbose)
-	if err != nil {
-		fmt.Printf("Unable to download repository %s: %q\n", f.Repository, err)
-		return nil
+	if !downloader.SupportedURL(repo) {
+		return fmt.Errorf("unsupported repository URL %s\nShould either end in '.git' or be HTTP/HTTPS", repo)
 	}
 
-	err = feature.SaveToFile(append(existing, f), dataFile)
+	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
-		fmt.Printf("Unable to save feature %s: %q\n", f.Name, err)
+		return errors.Wrapf(err, "unable to load configuration from %s", config.ConfigFile)
+	}
+
+	err = downloader.Download(repo, hash, conf.WorkDir, verbose)
+	if err != nil {
+		return errors.Wrapf(err, "unable to download repository %s", repo, err)
+	}
+
+	mf, err := feature.LoadManifest(filepath.Join(conf.WorkDir, downloader.RepoDir(repo)))
+	if err != nil {
+		return errors.Wrapf(err, "unable to load features manifest for repository %s", repo)
+	}
+	if len(mf) == 0 {
+		return fmt.Errorf("not adding repository %s as it does not contain any Gloo features", repo)
+	}
+
+	features := make([]feature.Feature, len(mf))
+	for i, f := range mf {
+		features[i] = feature.Feature{
+			Name:       f.Name,
+			GlooDir:    f.GlooDir,
+			EnvoyDir:   f.EnvoyDir,
+			Repository: repo,
+			Revision:   hash,
+			Enabled:    true,
+		}
+	}
+	featureStore := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	err = featureStore.AddAll(features)
+	if err != nil {
+		return errors.Wrapf(err, "unable to add features found in repo %s", repo)
+	}
+	err = repoStore.Add(feature.Repository{URL: repo, Commit: hash})
+	if err != nil {
+		return errors.Wrapf(err, "unable to save repo %s", repo)
 	}
 	return nil
 }

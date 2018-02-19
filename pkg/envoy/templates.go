@@ -92,14 +92,14 @@ func init() {
 
 func path(f feature.Feature) string {
 	if strings.HasSuffix(f.Repository, ".git") {
-		return fmt.Sprintf("%s/%s/envoy", workDir, downloader.RepoDir(f.Repository))
+		return fmt.Sprintf("%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
 	}
 
 	if isGitHubHTTP(f.Repository) {
-		return fmt.Sprintf("%s/%s-%s/envoy", workDir, f.Name, f.Version)
+		return fmt.Sprintf("%s/%s-%s/envoy", workDir, f.Name, f.Revision)
 	}
 
-	return fmt.Sprintf("%s/%s/envoy", workDir, downloader.RepoDir(f.Repository))
+	return fmt.Sprintf("%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
 }
 
 func isGitHubHTTP(url string) bool {

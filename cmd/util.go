@@ -8,7 +8,8 @@ import (
 )
 
 func loadEnabledFeatures() ([]feature.Feature, error) {
-	features, err := feature.LoadFromFile(dataFile)
+	store := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	features, err := store.List()
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +28,8 @@ func featuresHash(features []feature.Feature) string {
 	hash := sha256.New()
 	for _, f := range features {
 		hash.Write([]byte(f.Name))
-		hash.Write([]byte(f.Version))
+		hash.Write([]byte(f.Repository))
+		hash.Write([]byte(f.Revision))
 	}
 
 	return fmt.Sprintf("%x", hash.Sum(nil))[:8]

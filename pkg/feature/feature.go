@@ -1,45 +1,111 @@
 package feature
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"os"
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"time"
 )
 
+const (
+	//FeaturesFileName represents the filename for features
+	FeaturesFileName = "features.json"
+)
+
+type ManifestFeature struct {
+	Name     string `json:"name"`
+	GlooDir  string `json:"gloo,omitifempty"`
+	EnvoyDir string `json:"envoy,omitifempty"`
+}
+
+func LoadManifest(folder string) ([]ManifestFeature, error) {
+	b, err := ioutil.ReadFile(filepath.Join(folder, "features.json"))
+	if err != nil {
+		return nil, err
+	}
+	mf := []ManifestFeature{}
+	err = json.Unmarshal(b, &mf)
+	if err != nil {
+		return nil, err
+	}
+	return mf, nil
+}
+
 type Feature struct {
 	Name       string `json:"name"`
-	Version    string `json:"commit"`
+	GlooDir    string `json:"gloo,omitifempty"`
+	EnvoyDir   string `json:"envoy,omitifempty"`
 	Repository string `json:"repository"`
+	Revision   string `json:"revision"`
 	Enabled    bool   `json:"enabled"`
 }
 
-func ListDefaultFeatures() []Feature {
-	// hard coded list of all known features
-	return []Feature{
-		Feature{
-			Name:       "squash",
-			Version:    "9397617b238cc4f17a0a3f0dc24194baf506ac97",
-			Repository: "https://github.com/axhixh/envoy-squash.git",
-			Enabled:    true,
-		},
-		Feature{
-			Name:       "echo",
-			Version:    "37a53fefe0a267fe3f4704c35e3721a4b6032f2a",
-			Repository: "https://github.com/axhixh/echo.git",
-			Enabled:    true,
-		},
-		Feature{
-			Name:       "lambda",
-			Version:    "9aeb7747286c9116d9f531f7cc2c3331a8a23c7f",
-			Repository: "git@github.com:solo-io/glue-lambda.git",
-			Enabled:    true,
-		},
-	}
+type FeatureStore interface {
+	Init() error
+	AddAll([]Feature) error
+	Update(Feature) error
+	List() ([]Feature, error)
+	RemoveForRepo(repoURL string) error
+}
+type FileFeatureStore struct {
+	Filename string
 }
 
-func Save(features []Feature, w io.Writer) error {
+func (f *FileFeatureStore) Init() error {
+	return f.save([]Feature{})
+}
+func (f *FileFeatureStore) AddAll(features []Feature) error {
+	existing, err := f.List()
+	if err != nil {
+		return err
+	}
+
+	updated := existing
+	for _, feature := range features {
+		for _, e := range existing {
+			if e.Name == feature.Name {
+				return fmt.Errorf("feature %s already exists", feature.Name)
+			}
+		}
+		updated = append(updated, feature)
+	}
+	return f.save(updated)
+}
+
+func (f *FileFeatureStore) Update(feature Feature) error {
+	existing, err := f.List()
+	if err != nil {
+		return err
+	}
+
+	updated := make([]Feature, len(existing))
+	for i, e := range existing {
+		if e.Name == feature.Name {
+			updated[i] = feature
+		} else {
+			updated[i] = e
+		}
+	}
+	return f.save(updated)
+}
+
+func (f *FileFeatureStore) RemoveForRepo(repo string) error {
+	existing, err := f.List()
+	if err != nil {
+		return err
+	}
+
+	updated := []Feature{}
+	for _, e := range existing {
+		if e.Repository != repo {
+			updated = append(updated, e)
+		}
+	}
+	return f.save(updated)
+}
+
+func (f *FileFeatureStore) save(features []Feature) error {
 	b, err := json.MarshalIndent(featureFile{
 		Date:        time.Now(),
 		GeneratedBy: "thetool",
@@ -49,40 +115,20 @@ func Save(features []Feature, w io.Writer) error {
 		return err
 	}
 
-	_, err = w.Write(b)
-	return err
+	return ioutil.WriteFile(f.Filename, b, 0644)
 }
 
-func SaveToFile(features []Feature, filename string) error {
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return Save(features, f)
-}
-
-func Load(r io.Reader) ([]Feature, error) {
-	buf := bytes.NewBuffer(make([]byte, 0, 32*1024))
-	_, err := buf.ReadFrom(r)
+func (f *FileFeatureStore) List() ([]Feature, error) {
+	b, err := ioutil.ReadFile(f.Filename)
 	if err != nil {
 		return nil, err
 	}
 	ff := &featureFile{}
-	err = json.Unmarshal(buf.Bytes(), ff)
+	err = json.Unmarshal(b, ff)
 	if err != nil {
 		return nil, err
 	}
 	return ff.Features, nil
-}
-
-func LoadFromFile(filename string) ([]Feature, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return Load(f)
 }
 
 type featureFile struct {
