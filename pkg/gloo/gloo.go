@@ -1,4 +1,4 @@
-package glue
+package gloo
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"github.com/solo-io/thetool/pkg/util"
 )
 
-func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, glueRepo, glueHash, workDir string) error {
+func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, glooRepo, glooHash, workDir string) error {
 	fmt.Println("Building Gloo...")
 
 	script := fmt.Sprintf(buildScript, workDir)
@@ -23,12 +23,12 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	}
 
 	if !dryRun {
-		if err := downloader.Download(glueRepo, glueHash, workDir, verbose); err != nil {
-			return errors.Wrap(err, "unable to download glue repository")
+		if err := downloader.Download(glooRepo, glooHash, workDir, verbose); err != nil {
+			return errors.Wrap(err, "unable to download gloo repository")
 		}
 		if cache {
 			if err := os.MkdirAll("cache/gloo", 0755); err != nil {
-				return errors.Wrap(err, "unable to create cache directory for glue")
+				return errors.Wrap(err, "unable to create cache directory for gloo")
 			}
 		}
 

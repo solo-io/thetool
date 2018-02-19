@@ -19,6 +19,6 @@ func DeployLocalCmd() *cobra.Command {
 
 func runDeployLocal() {
 	/// storage option is local files?
-	// run glue locally
+	// run gloo locally
 	// run envoy in docker
 }

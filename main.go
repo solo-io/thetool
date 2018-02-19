@@ -9,7 +9,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "thetool",
 		Short: "Build Tool",
-		Long:  "Build the Universe and glue things together",
+		Long:  "Build the Universe and gloo things together",
 	}
 
 	rootCmd.AddCommand(cmd.InitCmd())

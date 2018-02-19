@@ -39,13 +39,13 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // windows
 }
 
-// Glue and its components are deployed outside the K8S cluster but
+// Gloo and its components are deployed outside the K8S cluster but
 // we will use CRD for storage
 func runDeployK8SOut(verbose, dryRun bool, dockerUser, kubeConfig string) {
 	fmt.Println("verbose ", verbose, " dryRun ", dryRun, " dockerUser ", dockerUser, " kubeconfig ", kubeConfig)
 	fmt.Println("not implemetned deploying out of kubernetes cluster")
-	// save the glue configuration - shared by other tools]
+	// save the gloo configuration - shared by other tools]
 	// storage option is k8s CRD
-	// run glue in docker
-	// run envoy in docker -- use --link option to link envoy to glue
+	// run gloo in docker
+	// run envoy in docker -- use --link option to link envoy to gloo
 }

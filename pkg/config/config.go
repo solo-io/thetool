@@ -12,7 +12,7 @@ const (
 	WorkDir = "repositories"
 	// EnvoyHash is the commit hash of the version of Envoy used
 	EnvoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
-	// GlooHash is the commit hash of the version of Glue used
+	// GlooHash is the commit hash of the version of Gloo used
 	GlooHash = "cef37326d4be6107583c915c965e43040bd3c473"
 	// GlooRepo is the repository URL for Gloo
 	GlooRepo = "https://github.com/solo-io/gloo.git"

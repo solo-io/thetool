@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	helmValuesContent = `#custom values for Glue Helm chart
+	helmValuesContent = `#custom values for Gloo Helm chart
 #gateway
 gw:
   type: NodePort
@@ -16,12 +16,12 @@ gw:
   serviceCluster: cluster
   serviceNode: node
 
-glue:
+gloo:
   type: NodePort
   replicaCount: 1
   port: 80
-  image: "{{ .GlueImage }}"
-  imageTag: {{ .GlueTag }}"
+  image: "{{ .GlooImage }}"
+  imageTag: {{ .GlooTag }}"
 `
 )
 

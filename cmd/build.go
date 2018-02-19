@@ -7,7 +7,7 @@ import (
 
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/envoy"
-	"github.com/solo-io/thetool/pkg/glue"
+	"github.com/solo-io/thetool/pkg/gloo"
 	"github.com/spf13/cobra"
 )
 
@@ -113,14 +113,14 @@ func runBuild(verbose, dryRun bool, buildConfig BuildConfig, target component) e
 		if target != componentAll && target != componentGloo {
 			return
 		}
-		if err := glue.Build(enabled, verbose, dryRun,
+		if err := gloo.Build(enabled, verbose, dryRun,
 			buildConfig.UseCache, buildConfig.SSHKeyFile,
 			conf.GlooRepo, conf.GlooHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		if err := glue.Publish(verbose, dryRun,
+		if err := gloo.Publish(verbose, dryRun,
 			buildConfig.PublishImages, conf.WorkDir, buildConfig.ImageTag, buildConfig.DockerUser); err != nil {
 			fmt.Println(err)
 		}

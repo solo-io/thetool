@@ -1,4 +1,4 @@
-package glue
+package gloo
 
 import "testing"
 

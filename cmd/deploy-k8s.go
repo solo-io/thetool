@@ -48,13 +48,13 @@ func runDeployK8S(verbose, dryRun bool, dockerUser string) error {
 		fmt.Println("Unable to generate Helm chart values")
 	}
 
-	// install Glue using Helm
+	// install Gloo using Helm
 	return nil
 }
 
 func generateHelmValues(verbose bool, featureHash, user string) error {
 	fmt.Println("Generating Helm Chart values...")
-	filename := "glue-chart.yaml"
+	filename := "gloo-chart.yaml"
 	f, err := os.Create(filename)
 	if err != nil {
 		return errors.Wrap(err, "unable to create file: "+filename)
@@ -63,8 +63,8 @@ func generateHelmValues(verbose bool, featureHash, user string) error {
 	err = helmValuesTemplate.Execute(f, map[string]string{
 		"EnvoyImage": user + "/envoy",
 		"EnvoyTag":   featureHash,
-		"GlueImage":  user + "/glue",
-		"GlueTag":    featureHash,
+		"GlooImage":  user + "/gloo",
+		"GlooTag":    featureHash,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)

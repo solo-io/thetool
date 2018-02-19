@@ -22,7 +22,7 @@ func loadEnabledFeatures() ([]feature.Feature, error) {
 	return enabled, nil
 }
 
-// featuresHash generates a hash for particular envoy and glue build
+// featuresHash generates a hash for particular envoy and gloo build
 // based on the features included
 func featuresHash(features []feature.Feature) string {
 	hash := sha256.New()
