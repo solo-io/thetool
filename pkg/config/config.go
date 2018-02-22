@@ -13,22 +13,29 @@ const (
 	// EnvoyHash is the commit hash of the version of Envoy used
 	EnvoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
 	// GlooHash is the commit hash of the version of Gloo used
-	GlooHash = "cef37326d4be6107583c915c965e43040bd3c473"
+	GlooHash = "c88c90c332e5528a070a1c800bc65b2c39f8ca24"
 	// GlooRepo is the repository URL for Gloo
 	GlooRepo = "https://github.com/solo-io/gloo.git"
+	//GlooChartHash is the commit hash of the Gloo chart used
+	GlooChartHash = "a2f12f82fd41d7b7eab91a2f825fee8f9fdf6ec5"
+	//GlooChartRepo is the repository URL for Gloo chart
+	GlooChartRepo = "https://github.com/solo-io/gloo-chart.git"
+
 	// DockerUser is the default Docker registry user used for publishing the images
-	DockerUser = "solo-io"
+	DockerUser = "soloio"
 	// ConfigFile is the name of the configuraiton file
 	ConfigFile = "thetool.json"
 )
 
 // Config contains the configuration used by thetool
 type Config struct {
-	WorkDir    string `json:"workDir"`
-	EnvoyHash  string `json:"envoyHash"`
-	GlooHash   string `json:"glooHash"`
-	GlooRepo   string `json:"glooRepo"`
-	DockerUser string `json:"dockerUser,omitempty"`
+	WorkDir       string `json:"workDir"`
+	EnvoyHash     string `json:"envoyHash"`
+	GlooHash      string `json:"glooHash"`
+	GlooRepo      string `json:"glooRepo"`
+	GlooChartHash string `json:"glooChartHash"`
+	GlooChartRepo string `json:"glooChartRepo"`
+	DockerUser    string `json:"dockerUser,omitempty"`
 }
 
 // Save the current configuration used by thetool to a file

@@ -3,10 +3,18 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+
+	"github.com/solo-io/thetool/pkg/downloader"
+	"github.com/solo-io/thetool/pkg/util"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/spf13/cobra"
+)
+
+const (
+	glooChartYaml = "gloo-chart.yaml"
 )
 
 func DeployK8SCmd() *cobra.Command {
@@ -18,17 +26,19 @@ func DeployK8SCmd() *cobra.Command {
 			verbose, _ := f.GetBool("verbose")
 			dryRun, _ := f.GetBool("dry-run")
 			dockerUser, _ := f.GetString("docker-user")
-			runDeployK8S(verbose, dryRun, dockerUser)
+			imageTag, _ := f.GetString("image-tag")
+			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag); err != nil {
+				fmt.Printf("Unable to deploy Gloo: %q\n", err)
+			}
 		},
 	}
 	return cmd
 }
 
-func runDeployK8S(verbose, dryRun bool, dockerUser string) error {
+func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
-		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
-		return nil
+		return errors.Wrapf(err, "unable to load configuration from %s", config.ConfigFile)
 	}
 	if dockerUser == "" {
 		dockerUser = conf.DockerUser
@@ -38,23 +48,31 @@ func runDeployK8S(verbose, dryRun bool, dockerUser string) error {
 	}
 	enabled, err := loadEnabledFeatures()
 	if err != nil {
-		fmt.Println("Unable to get enabled features")
-		return nil
+		return errors.Wrap(err, "unable to get enabled features")
 	}
 	fmt.Printf("Building with %d features\n", len(enabled))
-	featuresHash := featuresHash(enabled)
-	err = generateHelmValues(false, featuresHash, dockerUser)
-	if err != nil {
-		fmt.Println("Unable to generate Helm chart values")
+	if imageTag == "" {
+		imageTag = featuresHash(enabled)
+	}
+	if err := generateHelmValues(false, imageTag, dockerUser); err != nil {
+		return errors.Wrap(err, "unable to generate Helm chart values")
 	}
 
+	if !dryRun {
+		fmt.Printf("Downloading Gloo chart from %s", conf.GlooChartRepo)
+		if err := downloader.Download(conf.GlooChartRepo, conf.GlooChartHash, conf.WorkDir, verbose); err != nil {
+			return errors.Wrap(err, "unable to download Gloo chart")
+		}
+	}
 	// install Gloo using Helm
-	return nil
+	helmArgs := []string{"install", filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo)),
+		"-f", glooChartYaml}
+	return util.RunCmd(verbose, dryRun, "helm", helmArgs...)
 }
 
 func generateHelmValues(verbose bool, featureHash, user string) error {
 	fmt.Println("Generating Helm Chart values...")
-	filename := "gloo-chart.yaml"
+	filename := glooChartYaml
 	f, err := os.Create(filename)
 	if err != nil {
 		return errors.Wrap(err, "unable to create file: "+filename)

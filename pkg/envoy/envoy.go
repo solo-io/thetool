@@ -18,6 +18,12 @@ const (
 	buildScript   = `#!/bin/bash
 
 set -e
+
+if [ -f "/etc/github/id_rsa" ]; then
+  chmod 400 /etc/github/id_rsa
+  export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
+fi
+
 cd /source
 bazel build -c dbg //:envoy
 cp -f bazel-bin/envoy .
@@ -25,7 +31,7 @@ cp -f bazel-bin/envoy .
 `
 )
 
-func Build(enabled []feature.Feature, verbose, dryRun, cache bool, eHash, wDir string) error {
+func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir string) error {
 	fmt.Println("Building Envoy...")
 	envoyHash = eHash
 	workDir = wDir
@@ -37,7 +43,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, eHash, wDir s
 		return err
 	}
 	// run build in docker
-	ioutil.WriteFile("build.sh", []byte(buildScript), 0755)
+	ioutil.WriteFile("build-envoy.sh", []byte(buildScript), 0755)
 	if cache {
 		if err := os.MkdirAll("cache/envoy", 0755); err != nil {
 			return errors.Wrap(err, "unable to create cache for envoy")
@@ -49,21 +55,15 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, eHash, wDir s
 		return errors.Wrap(err, "unable to get working directory")
 	}
 	name := "thetool-envoy"
-	var args []string
+	args := []string{"run", "-i", "--rm", "--name", name,
+		"-v", pwd + ":/source"}
 	if cache {
-		args = []string{
-			"run", "-i", "--rm", "--name", name,
-			"-v", pwd + ":/source",
-			"-v", pwd + "/cache/envoy:/root/.cache/bazel",
-			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
-		}
-	} else {
-		args = []string{
-			"run", "-i", "--rm", "--name", name,
-			"-v", pwd + ":/source",
-			"envoyproxy/envoy-build-ubuntu", "/source/build.sh",
-		}
+		args = append(args, "-v", pwd+"/cache/envoy:/root/.cache/bazel")
 	}
+	if sshKeyFile != "" {
+		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
+	}
+	args = append(args, "envoyproxy/envoy-build-ubuntu", "/source/build-envoy.sh")
 
 	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {

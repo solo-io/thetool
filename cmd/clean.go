@@ -21,7 +21,7 @@ func CleanCmd() *cobra.Command {
 func runClean() {
 	toDelete := []string{
 		"BUILD", "WORKSPACE", "Dockerfile.envoy", "envoy",
-		"build.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
+		"build-envoy.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
 		"bazel-source", "bazel-testlogs", "gloo-chart.yaml",
 		"build-gloo.sh", "gloo", "cache",
 	}

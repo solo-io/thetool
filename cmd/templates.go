@@ -21,7 +21,15 @@ gloo:
   replicaCount: 1
   port: 80
   image: "{{ .GlooImage }}"
-  imageTag: {{ .GlooTag }}"
+  imageTag: {{ .GlooTag }}
+
+fdiscovery:
+  type: ClusterIP
+  replicaCount: 1
+  port: 8080
+  image: "soloio/glue-discovery"
+  imageTag: "9cf492d"
+  enabled: true 
 `
 )
 

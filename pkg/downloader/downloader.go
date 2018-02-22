@@ -61,7 +61,7 @@ func Download(repoURL, commitHash, folder string, verbose bool) error {
 		return expand(folder, filename)
 	}
 
-	return fmt.Errorf("unsupported repository scheme %s\nShould either end in '.git' or be HTTP/S URL", repoURL)
+	return fmt.Errorf("unsupported repository scheme %s (should either end in '.git' or be HTTP/S URL)", repoURL)
 }
 
 func withHTTP(url, destination string) error {

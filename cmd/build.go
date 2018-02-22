@@ -97,7 +97,9 @@ func runBuild(verbose, dryRun bool, buildConfig BuildConfig, target component) e
 		if target != componentAll && target != componentEnvoy {
 			return
 		}
-		if err := envoy.Build(enabled, verbose, dryRun, buildConfig.UseCache, conf.EnvoyHash, conf.WorkDir); err != nil {
+		if err := envoy.Build(enabled, verbose, dryRun,
+			buildConfig.UseCache, buildConfig.SSHKeyFile,
+			conf.EnvoyHash, conf.WorkDir); err != nil {
 			fmt.Println(err)
 			return
 		}

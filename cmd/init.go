@@ -42,6 +42,8 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 	}
 
 	// Let's save the configuration file
+	conf.GlooChartRepo = config.GlooChartRepo
+	conf.GlooChartHash = config.GlooChartHash
 	if err := conf.Save(config.ConfigFile); err != nil {
 		fmt.Printf("unable to save the configuration to %s: %q\n", config.ConfigFile, err)
 		return
