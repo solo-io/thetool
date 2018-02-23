@@ -62,7 +62,7 @@ func BuildCmd() *cobra.Command {
 	flags.BoolVarP(&config.PublishImages, "publish", "p", true, "publish Docker images to registry")
 	flags.StringVarP(&config.ImageTag, "image-tag", "t", "", "tag for Docker images; uses auto-generated hash if empty")
 	flags.StringVarP(&config.DockerUser, "docker-user", "u", "", "Docker user for publishing images")
-	flags.StringVar(&config.SSHKeyFile, "ssh-key", "", "SSH Key file")
+	flags.StringVar(&config.SSHKeyFile, "ssh-key", "", "file containg SSH key for git to use with private repositories")
 	return cmd
 }
 
