@@ -30,7 +30,7 @@ go get -u github.com/golang/dep/cmd/dep
 
 dep ensure -vendor-only
 GOOS=linux CGO_ENABLED=0 go build -o gloo
-cp gloo /gloo/gloo
+cp gloo /gloo/gloo-out
 `
 	installGo = `package install
 

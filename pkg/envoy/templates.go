@@ -51,6 +51,38 @@ git_repository(
    commit = ENVOY_COMMON_SHA,
 )
 
+# some dependencies that are hard coded for now; need to fix
+JSON_SHA = "c8ea63a31bbcf652d61490b0ccd86771538f8c6b"
+
+new_http_archive(
+   name = "json",
+   strip_prefix = "json-" + JSON_SHA + "/single_include/nlohmann",
+   url = "https://github.com/nlohmann/json/archive/" + JSON_SHA + ".zip",
+   build_file_content = """
+cc_library(
+   name = "json-lib",
+   hdrs = ["json.hpp"],
+   visibility = ["//visibility:public"],
+)
+   """
+)
+
+
+INJA_SHA = "74ad4281edd4ceca658888602af74bf2050107f0"
+
+new_http_archive(
+   name = "inja",
+   strip_prefix = "inja-" + INJA_SHA + "/src",
+   url = "https://github.com/pantor/inja/archive/" + INJA_SHA + ".zip",
+   build_file_content = """
+cc_library(
+   name = "inja-lib",
+   hdrs = ["inja.hpp"],
+   visibility = ["//visibility:public"],
+)
+   """
+)
+
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-{{ envoyHash }}",

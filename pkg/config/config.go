@@ -13,7 +13,7 @@ const (
 	// EnvoyHash is the commit hash of the version of Envoy used
 	EnvoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
 	// EnvoyBuilderHash
-	EnvoyBuilderHash = "52f6880ffbf761c9b809fc3ac208900956ff16b4"
+	EnvoyBuilderHash = "6153d9787cb894c2dd6b17a1539eaeba88ae15d79f66f63eec0f4713436d74f0"
 	// GlooHash is the commit hash of the version of Gloo used
 	GlooHash = "c88c90c332e5528a070a1c800bc65b2c39f8ca24"
 	// GlooRepo is the repository URL for Gloo

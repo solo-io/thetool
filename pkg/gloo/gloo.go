@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,6 +49,8 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 		}
 	}
 	// let's build it all in Docker
+	// create output directory
+	os.Mkdir("gloo-out", 0777)
 	pwd, err := os.Getwd()
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
@@ -72,10 +75,21 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 func Publish(verbose, dryRun, publish bool, workDir, imageTag, user string) error {
 	fmt.Println("Publishing Gloo...")
 
+	if err := copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
+		return errors.Wrap(err, "not able to copy the Dockerfile")
+	}
+	oldDir, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "not able to get working directory")
+	}
+	if err := os.Chdir("gloo-out"); err != nil {
+		return errors.Wrap(err, "unable to change working directory to gloo-out")
+	}
+	defer os.Chdir(oldDir)
+
 	tag := user + "/gloo:" + imageTag
 	buildArgs := []string{
 		"build",
-		"-f", filepath.Join(workDir, "gloo", "Dockerfile"),
 		"-t", tag, ".",
 	}
 	if err := util.RunCmd(verbose, dryRun, "docker", buildArgs...); err != nil {
@@ -126,4 +140,21 @@ func updateDep(plugins []GlooPlugin, filename string) error {
 	}
 
 	return nil
+}
+
+func copy(src, dst string) error {
+	from, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	return err
 }

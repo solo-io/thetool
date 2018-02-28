@@ -26,7 +26,7 @@ fi
 
 cd /source
 bazel build -c dbg //:envoy
-cp -f bazel-bin/envoy .
+cp -f bazel-bin/envoy envoy-out
 
 `
 )
@@ -42,6 +42,9 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	if err := generateFromTemplate(features, workspaceFile, workspaceTemplate); err != nil {
 		return err
 	}
+	// create output directory
+	os.Mkdir("envoy-out", 0777)
+
 	// run build in docker
 	ioutil.WriteFile("build-envoy.sh", []byte(buildScript), 0755)
 	if cache {
@@ -63,7 +66,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	if sshKeyFile != "" {
 		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
 	}
-	args = append(args, "envoyproxy/envoy-build-ubuntu:"+buildContainerHash, "/source/build-envoy.sh")
+	args = append(args, "envoyproxy/envoy-build-ubuntu@sha256:"+buildContainerHash, "/source/build-envoy.sh")
 
 	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {
@@ -81,7 +84,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	fmt.Println("Publishing Envoy...")
 
-	err := ioutil.WriteFile("Dockerfile.envoy", []byte(dockerfile), 0644)
+	err := ioutil.WriteFile("envoy-out/Dockerfile", []byte(dockerfile), 0644)
 	if err != nil {
 		return err
 	}
@@ -89,10 +92,17 @@ func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	image := user + "/envoy:" + imageTag
 	buildArgs := []string{
 		"build",
-		"-f", "Dockerfile.envoy",
 		"-t", image,
 		".",
 	}
+	oldDir, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "not able to get working directory")
+	}
+	if err := os.Chdir("envoy-out"); err != nil {
+		return errors.Wrap(err, "unable to change working directory to envoy-out")
+	}
+	defer os.Chdir(oldDir)
 	err = util.RunCmd(verbose, dryRun, "docker", buildArgs...)
 	if err != nil {
 		return errors.Wrap(err, "unable to create envoy image")
