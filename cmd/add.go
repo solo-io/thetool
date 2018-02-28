@@ -74,17 +74,7 @@ func runAdd(verbose bool, repo, hash string) error {
 		return fmt.Errorf("not adding repository %s as it does not contain any Gloo features", repo)
 	}
 
-	features := make([]feature.Feature, len(mf))
-	for i, f := range mf {
-		features[i] = feature.Feature{
-			Name:       f.Name,
-			GlooDir:    f.GlooDir,
-			EnvoyDir:   f.EnvoyDir,
-			Repository: repo,
-			Revision:   hash,
-			Enabled:    true,
-		}
-	}
+	features := toFeatures(repo, hash, mf)
 	featureStore := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
 	err = featureStore.AddAll(features)
 	if err != nil {

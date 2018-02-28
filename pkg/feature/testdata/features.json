@@ -1,0 +1,14 @@
+[
+    {
+        "name": "aws_lambda",
+        "gloo": "aws",
+        "envoy": "aws/envoy"
+    },
+    {
+        "name": "nats",
+        "gloo": "nats",
+        "envoy": "nats/envoy",
+        "enabled": "false",
+        "tags": ["experimental"]
+    }
+]

@@ -14,9 +14,11 @@ const (
 )
 
 type ManifestFeature struct {
-	Name     string `json:"name"`
-	GlooDir  string `json:"gloo,omitifempty"`
-	EnvoyDir string `json:"envoy,omitifempty"`
+	Name     string   `json:"name"`
+	GlooDir  string   `json:"gloo,omitifempty"`
+	EnvoyDir string   `json:"envoy,omitifempty"`
+	Enabled  string   `json:"enabled,omitifempty"`
+	Tags     []string `json:"tags,omitifempty"`
 }
 
 func LoadManifest(folder string) ([]ManifestFeature, error) {
@@ -32,13 +34,30 @@ func LoadManifest(folder string) ([]ManifestFeature, error) {
 	return mf, nil
 }
 
+func ToFeatures(repo, hash string, mf []ManifestFeature) []Feature {
+	features := make([]Feature, len(mf))
+	for i, f := range mf {
+		features[i] = Feature{
+			Name:       f.Name,
+			GlooDir:    f.GlooDir,
+			EnvoyDir:   f.EnvoyDir,
+			Repository: repo,
+			Revision:   hash,
+			Enabled:    "false" != f.Enabled, // anything other than false is enabled by default
+			Tags:       f.Tags,
+		}
+	}
+	return features
+}
+
 type Feature struct {
-	Name       string `json:"name"`
-	GlooDir    string `json:"gloo,omitifempty"`
-	EnvoyDir   string `json:"envoy,omitifempty"`
-	Repository string `json:"repository"`
-	Revision   string `json:"revision"`
-	Enabled    bool   `json:"enabled"`
+	Name       string   `json:"name"`
+	GlooDir    string   `json:"gloo,omitifempty"`
+	EnvoyDir   string   `json:"envoy,omitifempty"`
+	Repository string   `json:"repository"`
+	Revision   string   `json:"revision"`
+	Enabled    bool     `json:"enabled"`
+	Tags       []string `json:"tags,omitifempty"`
 }
 
 type FeatureStore interface {

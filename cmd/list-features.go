@@ -39,6 +39,9 @@ func runListFeatures() {
 		fmt.Println("Gloo Directory:  ", f.GlooDir)
 		fmt.Println("Envoy Directory: ", f.EnvoyDir)
 		fmt.Println("Enabled:         ", f.Enabled)
+		if len(f.Tags) != 0 {
+			fmt.Println("Tags:            ", f.Tags)
+		}
 		fmt.Println("")
 	}
 }
