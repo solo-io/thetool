@@ -32,6 +32,7 @@ type BuildConfig struct {
 func BuildCmd() *cobra.Command {
 	var verbose bool
 	var dryRun bool
+	var jobs int
 	config := BuildConfig{}
 	cmd := &cobra.Command{
 		Use:       "build [target to build]",
@@ -52,7 +53,7 @@ func BuildCmd() *cobra.Command {
 			default:
 				target = componentAll
 			}
-			return runBuild(verbose, dryRun, config, target)
+			return runBuild(verbose, dryRun, jobs, config, target)
 		},
 	}
 	flags := cmd.Flags()
@@ -63,10 +64,11 @@ func BuildCmd() *cobra.Command {
 	flags.StringVarP(&config.ImageTag, "image-tag", "t", "", "tag for Docker images; uses auto-generated hash if empty")
 	flags.StringVarP(&config.DockerUser, "docker-user", "u", "", "Docker user for publishing images")
 	flags.StringVar(&config.SSHKeyFile, "ssh-key", "", "file containg SSH key for git to use with private repositories")
+	flags.IntVarP(&jobs, "jobs", "j", 1, "number of jobs to run simultaneously")
 	return cmd
 }
 
-func runBuild(verbose, dryRun bool, buildConfig BuildConfig, target component) error {
+func runBuild(verbose, dryRun bool, jobs int, buildConfig BuildConfig, target component) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
 		fmt.Printf("Unable to load configuration from %s: %q\n", config.ConfigFile, err)
@@ -90,44 +92,58 @@ func runBuild(verbose, dryRun bool, buildConfig BuildConfig, target component) e
 	if buildConfig.ImageTag == "" {
 		buildConfig.ImageTag = featuresHash(enabled)
 	}
+
+	jobCh := make(chan func(), 10)
+	if jobs < 1 {
+		jobs = 1
+	}
+	for w := 0; w < jobs; w++ {
+		go worker(jobCh)
+	}
+
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		if target != componentAll && target != componentEnvoy {
-			return
+	if target == componentAll || target == componentEnvoy {
+		wg.Add(1)
+		jobCh <- func() {
+			defer wg.Done()
+			if err := envoy.Build(enabled, verbose, dryRun,
+				buildConfig.UseCache, buildConfig.SSHKeyFile,
+				conf.EnvoyHash, conf.WorkDir, conf.EnvoyBuilderHash); err != nil {
+				fmt.Println(err)
+				return
+			}
+			if err := envoy.Publish(verbose, dryRun,
+				buildConfig.PublishImages, buildConfig.ImageTag, buildConfig.DockerUser); err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
-		if err := envoy.Build(enabled, verbose, dryRun,
-			buildConfig.UseCache, buildConfig.SSHKeyFile,
-			conf.EnvoyHash, conf.WorkDir, conf.EnvoyBuilderHash); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err := envoy.Publish(verbose, dryRun,
-			buildConfig.PublishImages, buildConfig.ImageTag, buildConfig.DockerUser); err != nil {
-			fmt.Println(err)
-			return
-		}
-	}()
+	}
 
-	go func() {
-		defer wg.Done()
-		if target != componentAll && target != componentGloo {
-			return
-		}
-		if err := gloo.Build(enabled, verbose, dryRun,
-			buildConfig.UseCache, buildConfig.SSHKeyFile,
-			conf.GlooRepo, conf.GlooHash, conf.WorkDir); err != nil {
-			fmt.Println(err)
-			return
-		}
+	if target == componentAll || target == componentGloo {
+		wg.Add(1)
+		jobCh <- func() {
+			defer wg.Done()
+			if err := gloo.Build(enabled, verbose, dryRun,
+				buildConfig.UseCache, buildConfig.SSHKeyFile,
+				conf.GlooRepo, conf.GlooHash, conf.WorkDir); err != nil {
+				fmt.Println(err)
+				return
+			}
 
-		if err := gloo.Publish(verbose, dryRun,
-			buildConfig.PublishImages, conf.WorkDir, buildConfig.ImageTag, buildConfig.DockerUser); err != nil {
-			fmt.Println(err)
+			if err := gloo.Publish(verbose, dryRun,
+				buildConfig.PublishImages, conf.WorkDir, buildConfig.ImageTag, buildConfig.DockerUser); err != nil {
+				fmt.Println(err)
+			}
 		}
-	}()
-
+	}
+	close(jobCh)
 	wg.Wait()
 	return nil
+}
+
+func worker(jobs <-chan func()) {
+	for j := range jobs {
+		j()
+	}
 }
