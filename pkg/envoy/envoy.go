@@ -31,7 +31,7 @@ cp -f bazel-bin/envoy .
 `
 )
 
-func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir string) error {
+func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir, buildContainerHash string) error {
 	fmt.Println("Building Envoy...")
 	envoyHash = eHash
 	workDir = wDir
@@ -63,7 +63,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	if sshKeyFile != "" {
 		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
 	}
-	args = append(args, "envoyproxy/envoy-build-ubuntu", "/source/build-envoy.sh")
+	args = append(args, "envoyproxy/envoy-build-ubuntu:"+buildContainerHash, "/source/build-envoy.sh")
 
 	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {

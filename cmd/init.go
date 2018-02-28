@@ -41,7 +41,8 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 		return
 	}
 
-	// Let's save the configuration file
+	// Let's save the configuration file that aren't changed via CLI args
+	conf.EnvoyBuilderHash = config.EnvoyBuilderHash
 	conf.GlooChartRepo = config.GlooChartRepo
 	conf.GlooChartHash = config.GlooChartHash
 	if err := conf.Save(config.ConfigFile); err != nil {
