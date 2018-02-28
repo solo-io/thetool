@@ -18,24 +18,29 @@ const (
 )
 
 func DeployK8SCmd() *cobra.Command {
+	var resume bool
 	cmd := &cobra.Command{
 		Use:   "k8s",
 		Short: "deploy the universe in Kubernetes",
+		Long: `
+You can use dry-run to just generate gloo-chart.yaml file with parameters for Helm.
+After it you can edit the file to make any changes and continue with --resume flag.`,
 		Run: func(c *cobra.Command, args []string) {
 			f := c.InheritedFlags()
 			verbose, _ := f.GetBool("verbose")
 			dryRun, _ := f.GetBool("dry-run")
 			dockerUser, _ := f.GetString("docker-user")
 			imageTag, _ := f.GetString("image-tag")
-			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag); err != nil {
+			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag, resume); err != nil {
 				fmt.Printf("Unable to deploy Gloo: %q\n", err)
 			}
 		},
 	}
+	cmd.Flags().BoolVarP(&resume, "resume", "r", false, "resume deployment with existing "+glooChartYaml)
 	return cmd
 }
 
-func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string) error {
+func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, resume bool) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
 		return errors.Wrapf(err, "unable to load configuration from %s", config.ConfigFile)
@@ -46,20 +51,23 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string) error {
 	if dockerUser == "" {
 		return fmt.Errorf("need Docker user for referencing Docker images")
 	}
-	enabled, err := loadEnabledFeatures()
-	if err != nil {
-		return errors.Wrap(err, "unable to get enabled features")
-	}
-	fmt.Printf("Building with %d features\n", len(enabled))
-	if imageTag == "" {
-		imageTag = featuresHash(enabled)
-	}
-	if err := generateHelmValues(false, imageTag, dockerUser); err != nil {
-		return errors.Wrap(err, "unable to generate Helm chart values")
+
+	if !resume {
+		enabled, err := loadEnabledFeatures()
+		if err != nil {
+			return errors.Wrap(err, "unable to get enabled features")
+		}
+		fmt.Printf("Building with %d features\n", len(enabled))
+		if imageTag == "" {
+			imageTag = featuresHash(enabled)
+		}
+		if err := generateHelmValues(false, imageTag, dockerUser); err != nil {
+			return errors.Wrap(err, "unable to generate Helm chart values")
+		}
 	}
 
 	if !dryRun {
-		fmt.Printf("Downloading Gloo chart from %s", conf.GlooChartRepo)
+		fmt.Printf("Downloading Gloo chart from %s\n", conf.GlooChartRepo)
 		if err := downloader.Download(conf.GlooChartRepo, conf.GlooChartHash, conf.WorkDir, verbose); err != nil {
 			return errors.Wrap(err, "unable to download Gloo chart")
 		}
