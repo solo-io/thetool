@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -19,18 +21,49 @@ func CleanCmd() *cobra.Command {
 }
 
 func runClean() {
-	toDelete := []string{
-		"BUILD", "WORKSPACE", "envoy-out", "prebuilt",
-		"build-envoy.sh", "bazel-bin", "bazel-genfiles", "bazel-out",
-		"bazel-source", "bazel-testlogs", "gloo-chart.yaml",
-		"build-gloo.sh", "gloo-out", "cache",
+	files, err := ioutil.ReadDir(".")
+	if err != nil {
+		fmt.Println("Unable to list directory:", err)
+		return
 	}
 
-	for _, f := range toDelete {
-		if err := os.RemoveAll(f); err != nil {
-			if !os.IsNotExist(err) {
-				fmt.Printf("Unable to delete %v: %q\n", f, err)
+	for _, f := range files {
+		if shouldDelete(f) {
+			if err := os.RemoveAll(f.Name()); err != nil {
+				if !os.IsNotExist(err) {
+					fmt.Printf("Unable to delete %v: %q\n", f.Name(), err)
+				}
 			}
 		}
+	}
+}
+
+func shouldDelete(f os.FileInfo) bool {
+	name := f.Name()
+	if strings.HasPrefix(name, "build-") && strings.HasSuffix(name, ".sh") {
+		return true
+	}
+
+	if strings.HasSuffix(name, "-out") && f.IsDir() {
+		return true
+	}
+
+	if strings.HasPrefix(name, "bazel-") {
+		return true
+	}
+
+	switch name {
+	case "BUILD":
+		return true
+	case "WORKSPACE":
+		return true
+	case "prebuilt":
+		return true
+	case "gloo-chart.yaml":
+		return true
+	case "cache":
+		return true
+	default:
+		return false
 	}
 }

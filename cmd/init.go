@@ -29,6 +29,7 @@ func InitCmd() *cobra.Command {
 	flags.StringVarP(&conf.GlooHash, "gloo-hash", "g", config.GlooHash, "Gloo commit hash to use")
 	flags.StringVar(&conf.GlooRepo, "gloo-repo", config.GlooRepo, "Gloo git repository")
 	flags.StringVarP(&conf.DockerUser, "user", "u", config.DockerUser, "default Docker user")
+
 	flags.BoolVar(&noDefaults, "no-defaults", false, "do not add default features")
 	return cmd
 }
@@ -45,6 +46,14 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 	conf.EnvoyBuilderHash = config.EnvoyBuilderHash
 	conf.GlooChartRepo = config.GlooChartRepo
 	conf.GlooChartHash = config.GlooChartHash
+	// Other Gloo components
+	conf.GlooFuncDRepo = config.GlooFuncDiscoveryRepo
+	conf.GlooFuncDHash = config.GlooFuncDiscoveryHash
+	conf.GlooIngressRepo = config.GlooIngressRepo
+	conf.GlooIngressHash = config.GlooIngressHash
+	conf.GlooK8SDRepo = config.GlooK8SDiscvoeryRepo
+	conf.GlooK8SDHash = config.GlooK8SDiscoveryHash
+
 	if err := conf.Save(config.ConfigFile); err != nil {
 		fmt.Printf("unable to save the configuration to %s: %q\n", config.ConfigFile, err)
 		return

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	if sshKeyFile != "" {
 		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
 	}
-	args = append(args, "golang:1.9", "/gloo/build-gloo.sh")
+	args = append(args, "golang:1.10", "/gloo/build-gloo.sh")
 	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {
 		return errors.Wrap(err, "unable to build gloo; consider running with verbose flag")
@@ -75,7 +74,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 func Publish(verbose, dryRun, publish bool, workDir, imageTag, user string) error {
 	fmt.Println("Publishing Gloo...")
 
-	if err := copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
+	if err := util.Copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
 		return errors.Wrap(err, "not able to copy the Dockerfile")
 	}
 	oldDir, err := os.Getwd()
@@ -140,21 +139,4 @@ func updateDep(plugins []GlooPlugin, filename string) error {
 	}
 
 	return nil
-}
-
-func copy(src, dst string) error {
-	from, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer from.Close()
-
-	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
-	if err != nil {
-		return err
-	}
-	defer to.Close()
-
-	_, err = io.Copy(to, from)
-	return err
 }

@@ -80,6 +80,7 @@ thetool build all
 ```
 
 You can also choose to build individual components of gloo by specifying the name of the component like `envoy` or `gloo`.
+To get a complete list of available components please run `thetool build --help`
 
 The build command builds the appropriate binaries and their corresponding Docker images. It then publishes these images to Docker registry. If you do not want to publish, you can pass a flag to `thetool`
 
