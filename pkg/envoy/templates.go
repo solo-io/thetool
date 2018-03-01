@@ -19,8 +19,17 @@ if [ -f "/etc/github/id_rsa" ]; then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
+# setup prebuilt thirdparty
 cd /source
-bazel --batch build -c dbg //:envoy
+mkdir -p prebuilt
+cd prebuilt
+curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD
+ln -sf /thirdparty .
+ln -sf /thirdparty_build .
+
+# build
+cd /source
+bazel build -c dbg //:envoy
 cp -f bazel-bin/envoy envoy-out
 
 `
@@ -106,7 +115,9 @@ http_archive(
 )
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
-envoy_dependencies()
+envoy_dependencies(
+    path = "//prebuilt"
+)
 load("@envoy//bazel:cc_configure.bzl", "cc_configure")
 cc_configure()
 load("@envoy_api//bazel:repositories.bzl", "api_dependencies")

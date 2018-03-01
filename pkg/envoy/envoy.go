@@ -32,7 +32,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	os.Mkdir("envoy-out", 0777)
 
 	// run build in docker
-	ioutil.WriteFile("build-envoy.sh", []byte(buildScript), 0755)
+	ioutil.WriteFile("build-envoy.sh", []byte(fmt.Sprintf(buildScript, envoyHash)), 0755)
 	if cache {
 		if err := os.MkdirAll("cache/envoy", 0755); err != nil {
 			return errors.Wrap(err, "unable to create cache for envoy")
