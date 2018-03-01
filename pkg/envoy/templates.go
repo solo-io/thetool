@@ -71,7 +71,7 @@ ENVOY_COMMON_SHA = "0fefba1a893e9d8e24700b0c5919f301a3d10249"  # Feb 19, 2018 (l
 
 # load solo common
 git_repository(
-   name = "envoy_common",
+   name = "solo_envoy_common",
    remote = "git@github.com:solo-io/envoy-common",
    commit = ENVOY_COMMON_SHA,
 )
