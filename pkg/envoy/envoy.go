@@ -15,20 +15,6 @@ import (
 const (
 	buildFile     = "BUILD"
 	workspaceFile = "WORKSPACE"
-	buildScript   = `#!/bin/bash
-
-set -e
-
-if [ -f "/etc/github/id_rsa" ]; then
-  chmod 400 /etc/github/id_rsa
-  export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
-fi
-
-cd /source
-bazel build -c dbg //:envoy
-cp -f bazel-bin/envoy envoy-out
-
-`
 )
 
 func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir, buildContainerHash string) error {

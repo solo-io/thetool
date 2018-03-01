@@ -10,6 +10,21 @@ import (
 )
 
 const (
+	buildScript = `#!/bin/bash
+
+set -e
+
+if [ -f "/etc/github/id_rsa" ]; then
+  chmod 400 /etc/github/id_rsa
+  export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
+fi
+
+cd /source
+bazel --batch build -c dbg //:envoy
+cp -f bazel-bin/envoy envoy-out
+
+`
+
 	buildContent = `package(default_visibility = ["//visibility:public"])
 
 load(
@@ -29,7 +44,8 @@ envoy_cc_binary(
 )
 `
 
-	workspaceContent = `load('@bazel_tools//tools/build_defs/repo:git.bzl', 'git_repository')
+	workspaceContent = `workspace(name = "gloo")
+load('@bazel_tools//tools/build_defs/repo:git.bzl', 'git_repository')
 {{range .}}
 local_repository(
     name = "{{.Name}}",
@@ -107,7 +123,6 @@ proto_register_toolchains()
 
 	dockerfile = `FROM ubuntu:16.04
 
-ADD WORKSPACE /etc/envoy.WORKSPACE
 ADD envoy /usr/local/bin/envoy
 
 CMD /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster $CLUSTER --service-node $NODE`
