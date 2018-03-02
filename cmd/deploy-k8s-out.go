@@ -43,7 +43,7 @@ func homeDir() string {
 // we will use CRD for storage
 func runDeployK8SOut(verbose, dryRun bool, dockerUser, kubeConfig string) {
 	fmt.Println("verbose ", verbose, " dryRun ", dryRun, " dockerUser ", dockerUser, " kubeconfig ", kubeConfig)
-	fmt.Println("not implemetned deploying out of kubernetes cluster")
+	fmt.Println("Deploying outside Kubernetes cluster has not been implemented yet.")
 	// save the gloo configuration - shared by other tools]
 	// storage option is k8s CRD
 	// run gloo in docker
