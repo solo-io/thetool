@@ -19,6 +19,7 @@ const (
 
 func DeployK8SCmd() *cobra.Command {
 	var resume bool
+	var namespace string
 	cmd := &cobra.Command{
 		Use:   "k8s",
 		Short: "deploy the universe in Kubernetes",
@@ -31,16 +32,17 @@ After it you can edit the file to make any changes and continue with --resume fl
 			dryRun, _ := f.GetBool("dry-run")
 			dockerUser, _ := f.GetString("docker-user")
 			imageTag, _ := f.GetString("image-tag")
-			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag, resume); err != nil {
+			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag, namespace, resume); err != nil {
 				fmt.Printf("Unable to deploy Gloo: %q\n", err)
 			}
 		},
 	}
 	cmd.Flags().BoolVarP(&resume, "resume", "r", false, "resume deployment with existing "+glooChartYaml)
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "", "namespace to deploy gloo and its components")
 	return cmd
 }
 
-func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, resume bool) error {
+func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, resume bool) error {
 	conf, err := config.Load(config.ConfigFile)
 	if err != nil {
 		return errors.Wrapf(err, "unable to load configuration from %s", config.ConfigFile)
@@ -75,6 +77,10 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, resume bool
 	// install Gloo using Helm
 	helmArgs := []string{"install", filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo)),
 		"-f", glooChartYaml}
+
+	if namespace != "" {
+		helmArgs = append(helmArgs, "--namespace", namespace)
+	}
 	return util.RunCmd(verbose, dryRun, "helm", helmArgs...)
 }
 
