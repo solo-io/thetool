@@ -28,7 +28,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 			return errors.Wrap(err, "unable to download gloo repository")
 		}
 		if cache {
-			if err := os.MkdirAll("cache/gloo", 0755); err != nil {
+			if err := os.MkdirAll("cache/gloo", 0777); err != nil {
 				return errors.Wrap(err, "unable to create cache directory for gloo")
 			}
 		}
