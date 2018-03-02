@@ -143,7 +143,7 @@ var (
 	buildTemplate     *template.Template
 	workspaceTemplate *template.Template
 
-	envoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
+	envoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
 	workDir   = "repositories"
 )
 

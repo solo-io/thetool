@@ -12,7 +12,7 @@ const (
 	WorkDir = "repositories"
 
 	// EnvoyHash is the commit hash of the version of Envoy used
-	EnvoyHash = "29989a38c017d3be5aa3c735a797fcf58b754fe5"
+	EnvoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
 	// EnvoyBuilderHash
 	EnvoyBuilderHash = "6153d9787cb894c2dd6b17a1539eaeba88ae15d79f66f63eec0f4713436d74f0"
 
