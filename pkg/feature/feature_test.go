@@ -12,8 +12,12 @@ func TestManifest(t *testing.T) {
 		t.Error("expected 2 features but got ", len(features))
 	}
 
+	if !features[0].Enabled {
+		t.Error("expected first feature to be enabled")
+	}
+
 	if features[1].Enabled {
-		t.Error("expected second feature to be disaled")
+		t.Error("expected second feature to be disabled")
 	}
 
 	if len(features[1].Tags) != 1 {

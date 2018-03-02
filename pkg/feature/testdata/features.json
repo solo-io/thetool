@@ -8,7 +8,7 @@
         "name": "nats",
         "gloo": "nats",
         "envoy": "nats/envoy",
-        "enabled": "false",
+        "enabled": false,
         "tags": ["experimental"]
     }
 ]

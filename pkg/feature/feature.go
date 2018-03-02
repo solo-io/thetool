@@ -17,7 +17,7 @@ type ManifestFeature struct {
 	Name     string   `json:"name"`
 	GlooDir  string   `json:"gloo,omitifempty"`
 	EnvoyDir string   `json:"envoy,omitifempty"`
-	Enabled  string   `json:"enabled,omitifempty"`
+	Enabled  *bool    `json:"enabled,omitifempty"`
 	Tags     []string `json:"tags,omitifempty"`
 }
 
@@ -37,13 +37,17 @@ func LoadManifest(folder string) ([]ManifestFeature, error) {
 func ToFeatures(repo, hash string, mf []ManifestFeature) []Feature {
 	features := make([]Feature, len(mf))
 	for i, f := range mf {
+		enabled := true
+		if f.Enabled != nil {
+			enabled = *f.Enabled
+		}
 		features[i] = Feature{
 			Name:       f.Name,
 			GlooDir:    f.GlooDir,
 			EnvoyDir:   f.EnvoyDir,
 			Repository: repo,
 			Revision:   hash,
-			Enabled:    "false" != f.Enabled, // anything other than false is enabled by default
+			Enabled:    enabled,
 			Tags:       f.Tags,
 		}
 	}
