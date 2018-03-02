@@ -48,7 +48,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	args := []string{"run", "-i", "--rm", "--name", name,
 		"-v", pwd + ":/source"}
 	if cache {
-		args = append(args, "-v", pwd+"/cache/envoy:/root/.cache/bazel")
+		args = append(args, "-v", pwd+"/cache/envoy:/source/.cache/bazel")
 	}
 	if sshKeyFile != "" {
 		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
@@ -127,7 +127,7 @@ func generateFromTemplate(features []feature.Feature, filename string, t *templa
 
 func envoyBuildLog() string {
 	logFile := "command.log"
-	bazelDir := "cache/envoy/_bazel_root"
+	bazelDir := "cache/envoy/_bazel_thetool"
 	files, err := ioutil.ReadDir(bazelDir)
 	if err == nil {
 		for _, f := range files {
