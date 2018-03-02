@@ -84,7 +84,7 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 	return util.RunCmd(verbose, dryRun, "helm", helmArgs...)
 }
 
-func generateHelmValues(verbose bool, featureHash, user string) error {
+func generateHelmValues(verbose bool, imageTag, user string) error {
 	fmt.Println("Generating Helm Chart values...")
 	filename := glooChartYaml
 	f, err := os.Create(filename)
@@ -93,10 +93,12 @@ func generateHelmValues(verbose bool, featureHash, user string) error {
 	}
 	defer f.Close()
 	err = helmValuesTemplate.Execute(f, map[string]string{
-		"EnvoyImage": user + "/envoy",
-		"EnvoyTag":   featureHash,
-		"GlooImage":  user + "/gloo",
-		"GlooTag":    featureHash,
+		"EnvoyImage":             user + "/envoy",
+		"EnvoyTag":               imageTag,
+		"GlooImage":              user + "/gloo",
+		"GlooTag":                imageTag,
+		"FunctionDiscoveryImage": user + "/gloo-function-discovery",
+		"FunctionDiscoveryTag":   imageTag,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)

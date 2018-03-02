@@ -10,16 +10,18 @@ const (
 gw:
   type: NodePort
   replicaCount: 1
-  port: 80
+  port: 8080
+  securePort: 8443
+  adminPort: 19000
   image: "{{ .EnvoyImage }}"
   imageTag: {{ .EnvoyTag }}
-  serviceCluster: cluster
-  serviceNode: node
+  serviceCluster: "envoy"
+  serviceNode: "envoy"
 
 gloo:
   type: NodePort
   replicaCount: 1
-  port: 80
+  port: 8081
   image: "{{ .GlooImage }}"
   imageTag: {{ .GlooTag }}
 
@@ -27,8 +29,8 @@ fdiscovery:
   type: ClusterIP
   replicaCount: 1
   port: 8080
-  image: "soloio/glue-discovery"
-  imageTag: "9cf492d"
+  image: "{{ .FunctionDiscoveryImage }}"
+  imageTag: "{{ .FunctionDiscoveryTag }}"
   enabled: true 
 `
 )
