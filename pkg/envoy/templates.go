@@ -14,24 +14,15 @@ const (
 
 set -e
 
+groupadd --gid $THETOOL_GID -f thetoolgroup
+useradd -o --uid $THETOO_UID --gid $THETOOL_GID --no-create-home --home-dir /source thetool
+
 if [ -f "/etc/github/id_rsa" ]; then
   chmod 400 /etc/github/id_rsa
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
-# setup prebuilt thirdparty
-cd /source
-mkdir -p prebuilt
-cd prebuilt
-curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD
-ln -sf /thirdparty .
-ln -sf /thirdparty_build .
-
-# build
-cd /source
-bazel build -c dbg //:envoy
-cp -f bazel-bin/envoy envoy-out
-
+su thetool -c "cd /source && mkdir -p prebuilt && cd prebuilt && curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD && ln -sf /thirdparty . && ln -sf /thirdparty_build . && cd /source && bazel build -c dbg //:envoy && cp -f bazel-bin/envoy envoy-out"
 `
 
 	buildContent = `package(default_visibility = ["//visibility:public"])
