@@ -6,8 +6,10 @@
   </h1>
 
 
-<h2 align="center">Building, deploying and adding <br> features to Gloo</h2>
+<h3 align="center">Building, deploying and adding <br> features to Gloo</h3>
 <BR>
+    
+Automates custom builds and deployments of gloo and Envoy, simplifying the development process and the addition of user-contributed plugins. TheTool also supports building a “lean” Gloo, that only contains desired features without bloat.
 
 ## Installing
 ### Prerequisite
