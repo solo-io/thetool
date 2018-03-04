@@ -6,7 +6,7 @@
   </h1>
 
 
-<h4 align="center">Building, deploying and adding features to Gloo</h4>
+<h2 align="center">Building, deploying and adding <br> features to Gloo</h2>
 <BR>
 
 ## Installing
