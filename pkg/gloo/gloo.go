@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/util"
@@ -62,7 +63,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	}
 
 	if sshKeyFile != "" {
-		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa:ro")
+		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
 	}
 	u, err := user.Current()
 	if err != nil {

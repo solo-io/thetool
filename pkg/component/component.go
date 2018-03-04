@@ -10,6 +10,7 @@ import (
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/util"
 
+	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/envoy"
 	"github.com/solo-io/thetool/pkg/feature"
@@ -159,7 +160,7 @@ func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir s
 	args := []string{"run", "-i", "--rm", "--name", containerName, "-v", pwd + ":/code"}
 
 	if sshKeyFile != "" {
-		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
+		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
 	}
 	u, err := user.Current()
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/util"
 )
@@ -51,7 +52,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 		args = append(args, "-v", pwd+"/cache/envoy:/source/.cache/bazel")
 	}
 	if sshKeyFile != "" {
-		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
+		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
 	}
 
 	u, err := user.Current()
