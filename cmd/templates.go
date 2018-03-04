@@ -32,6 +32,11 @@ fdiscovery:
   image: "{{ .FunctionDiscoveryImage }}"
   imageTag: "{{ .FunctionDiscoveryTag }}"
   enabled: true 
+
+# features
+{{ range .Features }}
+{{.Name}}_enabled: {{.Enabled}}
+{{end}}
 `
 )
 
