@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//go:generate bash -c "sed \"s/VERSION_TEMPLATE/`git describe --tags`/\" version.go.template > cmd/version_xx_autogen.go"
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "thetool",
@@ -22,6 +23,7 @@ func main() {
 	rootCmd.AddCommand(cmd.BuildCmd())
 	rootCmd.AddCommand(cmd.CleanCmd())
 	rootCmd.AddCommand(cmd.DeployCmd())
+	rootCmd.AddCommand(cmd.VersionCmd())
 
 	rootCmd.Execute()
 }
