@@ -10,11 +10,11 @@ import (
 	"github.com/solo-io/thetool/pkg/feature"
 )
 
-const (
+var (
 	buildScript = `#!/bin/bash
 
 set -e
-` + common.CreateUserTemplate + `
+` + common.CreateUserTemplate("/source") + `
 ` + common.PrepareKeyTemplate + `
 
 if [ -f "/etc/github/id_rsa" ]; 
@@ -26,7 +26,9 @@ else
 fi
 
 `
+)
 
+const (
 	buildContent = `package(default_visibility = ["//visibility:public"])
 
 load(

@@ -9,14 +9,14 @@ import (
 	"github.com/solo-io/thetool/pkg/feature"
 )
 
-const (
+var (
 	buildScript = `#!/bin/bash
 
 set -ex
 
 chmod 777 $GOPATH/pkg/dep
 
-` + common.CreateUserTemplate + `
+` + common.CreateUserTemplate("/gloo") + `
 ` + common.PrepareKeyTemplate + `
 
 
@@ -30,6 +30,9 @@ fi
 
 
 `
+)
+
+const (
 	installGo = `package install
 
 import (

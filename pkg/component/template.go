@@ -6,11 +6,11 @@ import (
 	"github.com/solo-io/thetool/pkg/common"
 )
 
-const (
+var (
 	buildScript = `#!/bin/bash
 
 	set -ex
-	` + common.CreateUserTemplate + ` 	
+	` + common.CreateUserTemplate("/code") + ` 	
 ` + common.PrepareKeyTemplate + `
 
 	if [ -f "/etc/github/id_rsa" ]; 

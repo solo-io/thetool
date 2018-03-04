@@ -25,10 +25,12 @@ func GetSshKeyArgs(sshkey string) []string {
 	return args
 }
 
-const CreateUserTemplate = `
+func CreateUserTemplate(homedir string) string {
+	return `
 groupadd --gid $THETOOL_GID -f thetoolgroup
-useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir /code thetool
+useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir ` + homedir + ` thetool
 `
+}
 
 const PrepareKeyTemplate = `
 	if [ -f "/etc/user-data/ssh-keys/id_rsa" ];
