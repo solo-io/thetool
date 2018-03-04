@@ -18,7 +18,7 @@ import (
 func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, glooRepo, glooHash, workDir string) error {
 	fmt.Println("Building Gloo...")
 
-	script := fmt.Sprintf(buildScript, workDir)
+	script := fmt.Sprintf(buildScript, workDir, workDir)
 	if err := ioutil.WriteFile("build-gloo.sh", []byte(script), 0755); err != nil {
 		return errors.Wrap(err, "unable to write build script")
 	}
