@@ -1,7 +1,7 @@
 
 
 <h1 align="center">
-    <img src="theTool-01.png" alt="squash" width="200" height="248">
+    <img src="theTool-01.png" alt="squash" width="200" height="233">
   <br>
   </h1>
 
