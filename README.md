@@ -1,10 +1,13 @@
-       __  __         __              __
-      / /_/ /_  ___  / /_____  ____  / /
-     / __/ __ \/ _ \/ __/ __ \/ __ \/ / 
-    / /_/ / / /  __/ /_/ /_/ / /_/ / /  
-    \__/_/ /_/\___/\__/\____/\____/_/   
-                                    
-Build the gloo universe
+
+
+<h1 align="center">
+    <img src="theTool-01.png" alt="squash" width="200" height="248">
+  <br>
+  </h1>
+
+
+<h4 align="center">Building, deploying and adding features to Gloo</h4>
+<BR>
 
 ## Installing
 ### Prerequisite
