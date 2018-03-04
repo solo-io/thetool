@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/solo-io/thetool/pkg/downloader"
+	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/util"
 
 	"github.com/pkg/errors"
@@ -92,16 +93,27 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 		return errors.Wrap(err, "unable to create file: "+filename)
 	}
 	defer f.Close()
-	err = helmValuesTemplate.Execute(f, map[string]string{
+
+	features, err := loadFeatures()
+	if err != nil {
+		return errors.Wrap(err, "unable to load features")
+	}
+	err = helmValuesTemplate.Execute(f, map[string]interface{}{
 		"EnvoyImage":             user + "/envoy",
 		"EnvoyTag":               imageTag,
 		"GlooImage":              user + "/gloo",
 		"GlooTag":                imageTag,
 		"FunctionDiscoveryImage": user + "/gloo-function-discovery",
 		"FunctionDiscoveryTag":   imageTag,
+		"Features":               features,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)
 	}
 	return nil
+}
+
+func loadFeatures() ([]feature.Feature, error) {
+	store := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
+	return store.List()
 }
