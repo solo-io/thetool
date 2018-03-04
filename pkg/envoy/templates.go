@@ -15,10 +15,11 @@ const (
 set -e
 
 groupadd --gid $THETOOL_GID -f thetoolgroup
-useradd -o --uid $THETOO_UID --gid $THETOOL_GID --no-create-home --home-dir /source thetool
+useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir /source thetool
 
 if [ -f "/etc/github/id_rsa" ]; then
   chmod 400 /etc/github/id_rsa
+  chown thetool /etc/github/id_rsa
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
