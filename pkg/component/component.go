@@ -3,7 +3,6 @@ package component
 import (
 	"fmt"
 	"os"
-	"os/user"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -162,11 +161,12 @@ func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir s
 	if sshKeyFile != "" {
 		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
 	}
-	u, err := user.Current()
+
+	uargs, err := common.GetUidArgs()
 	if err != nil {
-		return errors.Wrap(err, "unable to get current user")
+		return err
 	}
-	args = append(args, "--env", "THETOOL_UID="+u.Uid, "--env", "THETOOL_GID="+u.Gid)
+	args = append(args, uargs...)
 	args = append(args, "golang:1.10", filepath.Join("/code", scriptFilename))
 	err = util.DockerRun(verbose, dryRun, name, args...)
 	if err != nil {

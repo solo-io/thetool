@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -55,11 +54,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
 	}
 
-	u, err := user.Current()
+	uargs, err := common.GetUidArgs()
 	if err != nil {
-		return errors.Wrap(err, "unable to get current user")
+		return err
 	}
-	args = append(args, "--env", "THETOOL_UID="+u.Uid, "--env", "THETOOL_GID="+u.Gid)
+	args = append(args, uargs...)
 	args = append(args, "envoyproxy/envoy-build-ubuntu@sha256:"+buildContainerHash, "/source/build-envoy.sh")
 
 	err = util.DockerRun(verbose, dryRun, name, args...)

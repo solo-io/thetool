@@ -14,10 +14,7 @@ const (
 	buildScript = `#!/bin/bash
 
 set -e
-
-groupadd --gid $THETOOL_GID -f thetoolgroup
-useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir /source thetool
-
+` + common.CreateUserTemplate + `
 ` + common.PrepareKeyTemplate + `
 
 if [ -f "/etc/github/id_rsa" ]; 

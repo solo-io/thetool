@@ -16,9 +16,7 @@ set -ex
 
 chmod 777 $GOPATH/pkg/dep
 
-groupadd --gid $THETOOL_GID -f thetoolgroup
-useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir /gloo thetool
-
+` + common.CreateUserTemplate + `
 ` + common.PrepareKeyTemplate + `
 
 
