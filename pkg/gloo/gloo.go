@@ -62,7 +62,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	}
 
 	if sshKeyFile != "" {
-		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa")
+		args = append(args, "-v", sshKeyFile+":/etc/github/id_rsa:ro")
 	}
 	u, err := user.Current()
 	if err != nil {
