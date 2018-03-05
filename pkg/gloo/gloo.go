@@ -18,7 +18,7 @@ import (
 func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, glooRepo, glooHash, workDir string) error {
 	fmt.Println("Building Gloo...")
 
-	script := fmt.Sprintf(buildScript, workDir, workDir)
+	script := fmt.Sprintf(buildScript, workDir)
 	if err := ioutil.WriteFile("build-gloo.sh", []byte(script), 0755); err != nil {
 		return errors.Wrap(err, "unable to write build script")
 	}
@@ -58,7 +58,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	name := "thetool-gloo"
 	args := []string{"run", "-i", "--rm", "--name", name, "-v", pwd + ":/gloo"}
 	if cache {
-		args = append(args, "-v", pwd+"/cache/gloo:/go/pkg/dep/sources")
+		gloocache := filepath.Join(pwd, "cache", "gloo")
+		// create it first to make sure it's with the current user.
+		os.MkdirAll(gloocache, 0755)
+
+		args = append(args, "-v", gloocache+":/go/pkg/dep/sources")
 	}
 
 	if sshKeyFile != "" {

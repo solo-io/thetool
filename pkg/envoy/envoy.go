@@ -48,7 +48,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	args := []string{"run", "-i", "--rm", "--name", name,
 		"-v", pwd + ":/source"}
 	if cache {
-		args = append(args, "-v", pwd+"/cache/envoy:/source/.cache/bazel")
+		// since the source in also mounted as a volume, this directory will be created as root in,
+		// so first create it now so it woudlnt be root
+		bazelcache := filepath.Join(".cache", "bazel")
+		os.MkdirAll(filepath.Join(pwd, bazelcache), 0755)
+		args = append(args, "-v", filepath.Join(pwd, "cache", "envoy")+":"+filepath.Join("/source", bazelcache))
 	}
 	if sshKeyFile != "" {
 		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)

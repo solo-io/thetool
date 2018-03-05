@@ -23,11 +23,34 @@ chmod 777 $GOPATH/pkg/dep
 if [ -f "/etc/github/id_rsa" ]; 
 then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
-  su thetool -c "PATH=\"$PATH\" && GIT_SSH_COMMAND=\"$GIT_SSH_COMMAND\" && git config --global url.\"git@github.com:\".insteadOf \"https://github.com\" &&cd $GOPATH && mkdir -p -v src/github.com/solo-io && cd src/github.com/solo-io && ln -s /gloo/%s/gloo . && cd gloo && pwd && go get -u github.com/golang/dep/cmd/dep && dep ensure -vendor-only && GOOS=linux CGO_ENABLED=0 go build -o gloo && cp gloo /gloo/gloo-out"
-else
-  su thetool -c "PATH=\"$PATH\" && cd $GOPATH && mkdir -p -v src/github.com/solo-io && cd src/github.com/solo-io && ln -s /gloo/%s/gloo . && cd gloo && pwd && go get -u github.com/golang/dep/cmd/dep && dep ensure -vendor-only && GOOS=linux CGO_ENABLED=0 go build -o gloo && cp gloo /gloo/gloo-out"
 fi
 
+# create a script to run in su 
+cat << EOF > build_user.sh
+#!/bin/bash
+set -ex
+
+if [ -n "$GIT_SSH_COMMAND" ]; then
+	GIT_SSH_COMMAND="$GIT_SSH_COMMAND"
+	git config --global url.\"git@github.com:\".insteadOf \"https://github.com\"
+fi
+
+PATH="$PATH"
+git config --global url.git@github.com:.insteadOf https://github.com/
+cd $GOPATH
+mkdir -p -v src/github.com/solo-io
+cd src/github.com/solo-io
+ln -s /gloo/%s/gloo .
+cd gloo && pwd
+go get -u github.com/golang/dep/cmd/dep
+dep ensure -vendor-only
+GOOS=linux CGO_ENABLED=0 go build -o gloo
+cp gloo /gloo/gloo-out
+
+EOF
+
+chmod a+rx ./build_user.sh
+su thetool -c ./build_user.sh
 
 `
 )

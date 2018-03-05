@@ -13,18 +13,33 @@ import (
 var (
 	buildScript = `#!/bin/bash
 
-set -e
+set -ex
 ` + common.CreateUserTemplate("/source") + `
 ` + common.PrepareKeyTemplate + `
 
 if [ -f "/etc/github/id_rsa" ]; 
 then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
-  su thetool -c "PATH=\"$PATH\" && GIT_SSH_COMMAND=\"$GIT_SSH_COMMAND\" && cd /source && mkdir -p prebuilt && cd prebuilt && curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD && ln -sf /thirdparty . && ln -sf /thirdparty_build . && cd /source && bazel build -c dbg //:envoy && cp -f bazel-bin/envoy envoy-out"
-else
-  su thetool -c "PATH=\"$PATH\" && cd /source && mkdir -p prebuilt && cd prebuilt && curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD && ln -sf /thirdparty . && ln -sf /thirdparty_build . && cd /source && bazel build -c dbg //:envoy && cp -f bazel-bin/envoy envoy-out"
 fi
 
+# create a script to run in su 
+cat << EOF > build_user.sh
+#!/bin/bash
+set -ex
+PATH="$PATH"
+GIT_SSH_COMMAND="$GIT_SSH_COMMAND"
+cd /source
+mkdir -p prebuilt
+cd prebuilt
+curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD
+ln -sf /thirdparty .
+ln -sf /thirdparty_build .
+cd /source
+bazel build -c dbg //:envoy && cp -f bazel-bin/envoy envoy-out
+EOF
+
+chmod a+rx ./build_user.sh
+su thetool -c ./build_user.sh
 `
 )
 

@@ -13,14 +13,35 @@ var (
 	` + common.CreateUserTemplate("/code") + ` 	
 ` + common.PrepareKeyTemplate + `
 
-	if [ -f "/etc/github/id_rsa" ]; 
-	then
-	  export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
-	  su thetool -c "PATH=\"$PATH\" && cd $GOPATH && GIT_SSH_COMMAND=\"$GIT_SSH_COMMAND\" && git config --global url.\"git@github.com:\".insteadOf \"https://github.com\" &&mkdir -p -v src/{{ .repoParent }} && cd src/{{ .repoParent }} && ln -s /code/{{ .workDir }}/{{ .repoDir }} . && cd {{ .repoDir }} && pwd && go get -u github.com/golang/dep/cmd/dep && dep ensure -vendor-only && GOOS=linux CGO_ENABLED=0 go build -o {{ .repoDir }} && cp {{ .repoDir }} /code/{{ .repoDir }}-out"
-	else
-      su thetool -c "PATH=\"$PATH\" && cd $GOPATH && mkdir -p -v src/{{ .repoParent }} && cd src/{{ .repoParent }} && ln -s /code/{{ .workDir }}/{{ .repoDir }} . && cd {{ .repoDir }} && pwd && go get -u github.com/golang/dep/cmd/dep && dep ensure -vendor-only && GOOS=linux CGO_ENABLED=0 go build -o {{ .repoDir }} && cp {{ .repoDir }} /code/{{ .repoDir }}-out"
-	fi
-	`
+if [ -f "/etc/github/id_rsa" ]; 
+then
+	export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
+fi
+
+# create a script to run in su 
+cat << EOF > build_user.sh
+#!/bin/bash
+set -ex
+PATH="$PATH"
+cd $GOPATH
+if [ -n "$GIT_SSH_COMMAND" ]; then
+	GIT_SSH_COMMAND="$GIT_SSH_COMMAND"
+	git config --global url.\"git@github.com:\".insteadOf \"https://github.com\"
+fi
+mkdir -p -v src/{{ .repoParent }}
+cd src/{{ .repoParent }}
+ln -s /code/{{ .workDir }}/{{ .repoDir }} .
+cd {{ .repoDir }}
+pwd
+go get -u github.com/golang/dep/cmd/dep
+dep ensure -vendor-only
+GOOS=linux CGO_ENABLED=0 go build -o {{ .repoDir }}
+cp {{ .repoDir }} /code/{{ .repoDir }}-out"
+EOF
+
+chmod a+rx ./build_user.sh
+su thetool -c ./build_user.sh
+`
 )
 
 var (
