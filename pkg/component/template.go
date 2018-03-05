@@ -1,7 +1,7 @@
 package component
 
 import (
-	"html/template"
+	"text/template"
 
 	"github.com/solo-io/thetool/pkg/common"
 )
