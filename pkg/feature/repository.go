@@ -101,7 +101,7 @@ func ListDefaultRepos() []Repository {
 	return []Repository{
 		Repository{
 			URL:    "https://github.com/solo-io/gloo-plugins.git",
-			Commit: "15415f10c2832fac55a3f319495df84860a2e170",
+			Commit: "c3117ee1da7b31165c4bf33311aa3fb9c37c3788",
 		},
 	}
 }
