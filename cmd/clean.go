@@ -48,20 +48,12 @@ func shouldDelete(f os.FileInfo) bool {
 		return true
 	}
 
-	if strings.HasPrefix(name, "bazel-") {
-		return true
-	}
-
 	switch name {
-	case "BUILD":
-		return true
-	case "WORKSPACE":
-		return true
-	case "prebuilt":
-		return true
 	case "gloo-chart.yaml":
 		return true
 	case "cache":
+		return true
+	case "envoy":
 		return true
 	default:
 		return false

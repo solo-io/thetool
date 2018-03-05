@@ -16,24 +16,25 @@ import (
 const (
 	buildFile     = "BUILD"
 	workspaceFile = "WORKSPACE"
+	buildDir      = "envoy"
 )
 
 func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir, buildContainerHash string) error {
 	fmt.Println("Building Envoy...")
+	// create directories
+	os.Mkdir(buildDir, 0777)
+	os.Mkdir(filepath.Join(buildDir, "envoy-out"), 0777)
 	envoyHash = eHash
-	workDir = wDir
 	features := envoyFilters(enabled)
-	if err := generateFromTemplate(features, buildFile, buildTemplate); err != nil {
+	if err := generateFromTemplate(features, filepath.Join(buildDir, buildFile), buildTemplate); err != nil {
 		return err
 	}
-	if err := generateFromTemplate(features, workspaceFile, workspaceTemplate); err != nil {
+	if err := generateFromTemplate(features, filepath.Join(buildDir, workspaceFile), workspaceTemplate); err != nil {
 		return err
 	}
-	// create output directory
-	os.Mkdir("envoy-out", 0777)
 
 	// run build in docker
-	ioutil.WriteFile("build-envoy.sh", []byte(fmt.Sprintf(buildScript, envoyHash)), 0755)
+	ioutil.WriteFile(filepath.Join(buildDir, "build-envoy.sh"), []byte(fmt.Sprintf(buildScript, envoyHash)), 0755)
 	if cache {
 		if err := os.MkdirAll("cache/envoy", 0755); err != nil {
 			return errors.Wrap(err, "unable to create cache for envoy")
@@ -44,9 +45,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
 	}
+	srcDir := filepath.Join(pwd, buildDir)
 	name := "thetool-envoy"
 	args := []string{"run", "-i", "--rm", "--name", name,
-		"-v", pwd + ":/source"}
+		"-v", srcDir + ":/source",
+		"-v", filepath.Join(pwd, wDir) + ":/repositories"}
 	if cache {
 		// since the source in also mounted as a volume, this directory will be created as root in,
 		// so first create it now so it woudlnt be root
@@ -81,7 +84,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	fmt.Println("Publishing Envoy...")
 
-	err := ioutil.WriteFile("envoy-out/Dockerfile", []byte(dockerfile), 0644)
+	err := ioutil.WriteFile(filepath.Join(buildDir, "envoy-out", "Dockerfile"), []byte(dockerfile), 0644)
 	if err != nil {
 		return err
 	}
@@ -96,7 +99,7 @@ func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	if err != nil {
 		return errors.Wrap(err, "not able to get working directory")
 	}
-	if err := os.Chdir("envoy-out"); err != nil {
+	if err := os.Chdir(filepath.Join(buildDir, "envoy-out")); err != nil {
 		return errors.Wrap(err, "unable to change working directory to envoy-out")
 	}
 	defer os.Chdir(oldDir)

@@ -27,7 +27,10 @@ cat << EOF > build_user.sh
 #!/bin/bash
 set -ex
 PATH="$PATH"
-GIT_SSH_COMMAND="$GIT_SSH_COMMAND"
+if [ -n "$GIT_SSH_COMMAND"]; then
+  GIT_SSH_COMMAND="$GIT_SSH_COMMAND"
+fi
+
 cd /source
 mkdir -p prebuilt
 cd prebuilt
@@ -80,10 +83,10 @@ bind(
 ENVOY_COMMON_SHA = "ee625c53848d990dd7e5b87c5fbcd2776054e9f8"  # Feb 26, 2018 (split metadata accessor)
 
 # load solo common
-git_repository(
-   name = "solo_envoy_common",
-   remote = "git@github.com:solo-io/envoy-common",
-   commit = ENVOY_COMMON_SHA,
+http_archive(
+   name = "solo_envoy_common",  
+   strip_prefix = "envoy-common-" + ENVOY_COMMON_SHA,
+   url = "https://github.com/solo-io/envoy-common/archive/" + ENVOY_COMMON_SHA + ".zip",
 )
 
 # some dependencies that are hard coded for now; need to fix
@@ -169,14 +172,14 @@ func init() {
 
 func path(f feature.Feature) string {
 	if strings.HasSuffix(f.Repository, ".git") {
-		return fmt.Sprintf("%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
+		return fmt.Sprintf("/%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
 	}
 
 	if isGitHubHTTP(f.Repository) {
-		return fmt.Sprintf("%s/%s-%s/envoy", workDir, f.Name, f.Revision)
+		return fmt.Sprintf("/%s/%s-%s/envoy", workDir, f.Name, f.Revision)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
+	return fmt.Sprintf("/%s/%s/%s", workDir, downloader.RepoDir(f.Repository), f.EnvoyDir)
 }
 
 func isGitHubHTTP(url string) bool {
