@@ -1,3 +1,0 @@
-package cmd
-
-const Version  = "VERSION_TEMPLATE"
