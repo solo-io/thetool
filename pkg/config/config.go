@@ -17,7 +17,7 @@ const (
 	EnvoyBuilderHash = "6153d9787cb894c2dd6b17a1539eaeba88ae15d79f66f63eec0f4713436d74f0"
 
 	// GlooHash is the commit hash of the version of Gloo used
-	GlooHash = "87ed5882f887e6e34ea053f677619d97b68a2a42"
+	GlooHash = "cf08737718cf62bf597f88aa2068c6f6b28b9992"
 	// GlooRepo is the repository URL for Gloo
 	GlooRepo = "https://github.com/solo-io/gloo.git"
 
