@@ -1,9 +1,9 @@
 package gloo
 
 import (
-	"html/template"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/feature"
