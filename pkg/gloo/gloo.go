@@ -3,10 +3,10 @@ package gloo
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/common"
