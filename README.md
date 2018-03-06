@@ -140,4 +140,23 @@ When you add a gloo feature repository, it loads the file `features.json` in the
 find what features are available. It uses the file to identify the gloo plugin folder and envoy
 filter folder for the feature.
 
+### Updating a Feature Repository
+You can get a list of feature repositories currently being used by `thetool` using the command:
+
+```
+thetool list-repo
+
+Repository:  https://github.com/solo-io/gloo-plugins.git
+Commit:      1f64f096161269a45aaaa533cab6de786a867287
+```
+
+You can update the version of repository being used to a newer version using the command:
+
+```
+thetool update -r https://github.com/solo-io/gloo-plugins.git -c 282a844ea3ed2527f5044408c9c98bc7ee027cd2
+
+Updated repository https://github.com/solo-io/gloo-plugins.git to commit hash 282a844ea3ed2527f5044408c9c98bc7ee027cd2
+```
+
+
 To learn more about writing your own gloo feature, please read the gloo documentation.

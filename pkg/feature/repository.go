@@ -31,19 +31,24 @@ type FileRepoStore struct {
 func (r *FileRepoStore) Init() error {
 	return r.save([]Repository{})
 }
-func (r *FileRepoStore) Add(repo Repository) error {
-	existing, err := r.List()
+func (r *FileRepoStore) AddOrUpdate(repo Repository) (bool, error) {
+	repos, err := r.List()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	for _, e := range existing {
-		if e.URL == repo.URL {
-			return fmt.Errorf("repository with URL %s already exists", repo.URL)
+	alreadyExists := false
+	for i, r := range repos {
+		if r.URL == repo.URL {
+			alreadyExists = true
+			repos[i].Commit = repo.Commit
+			break
 		}
 	}
-	updated := append(existing, repo)
-	return r.save(updated)
+	if !alreadyExists {
+		repos = append(repos, repo)
+	}
+	return alreadyExists, r.save(repos)
 }
 
 func (r *FileRepoStore) Remove(repoURL string) error {

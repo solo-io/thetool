@@ -20,11 +20,15 @@ func AddCmd() *cobra.Command {
 	var verbose bool
 
 	cmd := &cobra.Command{
-		Use:   "add",
-		Short: "add a Gloo feature repository",
-		Long:  "add a Gloo feature repository and all the features in the repository",
+		Use:     "add",
+		Aliases: []string{"update"},
+		Short:   "add or update a Gloo feature repository",
+		Long:    "add or update a Gloo feature repository and all the features in the repository",
 		Run: func(c *cobra.Command, args []string) {
-			runAdd(verbose, repoURL, commitHash)
+			err := runAdd(verbose, repoURL, commitHash)
+			if err != nil {
+				fmt.Println("unable to add/update the repository", err)
+			}
 		},
 	}
 
@@ -41,17 +45,6 @@ func AddCmd() *cobra.Command {
 
 func runAdd(verbose bool, repo, hash string) error {
 	repoStore := &feature.FileRepoStore{Filename: feature.ReposFileName}
-	existing, err := repoStore.List()
-	if err != nil {
-		return errors.Wrap(err, "unable to load repositories")
-	}
-
-	// check it isn't already existing feature
-	for _, e := range existing {
-		if e.URL == repo {
-			return fmt.Errorf("repository %s already exists\n", repo)
-		}
-	}
 	if !downloader.SupportedURL(repo) {
 		return fmt.Errorf("unsupported repository URL %s\nShould either end in '.git' or be HTTP/HTTPS", repo)
 	}
@@ -76,13 +69,18 @@ func runAdd(verbose bool, repo, hash string) error {
 
 	features := feature.ToFeatures(repo, hash, mf)
 	featureStore := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
-	err = featureStore.AddAll(features)
+	err = featureStore.AddOrUpdateAll(features)
 	if err != nil {
 		return errors.Wrapf(err, "unable to add features found in repo %s", repo)
 	}
-	err = repoStore.Add(feature.Repository{URL: repo, Commit: hash})
+	updated, err := repoStore.AddOrUpdate(feature.Repository{URL: repo, Commit: hash})
 	if err != nil {
 		return errors.Wrapf(err, "unable to save repo %s", repo)
+	}
+	if updated {
+		fmt.Printf("Updated repository %s to commit hash %s\n", repo, hash)
+	} else {
+		fmt.Printf("Added repository %s with commit hash %s\n", repo, hash)
 	}
 	return nil
 }

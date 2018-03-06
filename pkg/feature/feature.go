@@ -78,17 +78,23 @@ type FileFeatureStore struct {
 func (f *FileFeatureStore) Init() error {
 	return f.save([]Feature{})
 }
-func (f *FileFeatureStore) AddAll(features []Feature) error {
+func (f *FileFeatureStore) AddOrUpdateAll(features []Feature) error {
+	if len(features) == 0 {
+		// nothing to do
+		return nil
+	}
 	existing, err := f.List()
 	if err != nil {
 		return err
 	}
 
-	updated := existing
+	// remove any existing features for this repo
+	filtered := removeRepo(features[0].Repository, existing)
+	var updated []Feature
 	for _, feature := range features {
-		for _, e := range existing {
+		for _, e := range filtered {
 			if e.Name == feature.Name {
-				return fmt.Errorf("feature %s already exists", feature.Name)
+				return fmt.Errorf("feature %s already exists from another repository %s", feature.Name, e.Repository)
 			}
 		}
 		updated = append(updated, feature)
@@ -119,13 +125,18 @@ func (f *FileFeatureStore) RemoveForRepo(repo string) error {
 		return err
 	}
 
+	updated := removeRepo(repo, existing)
+	return f.save(updated)
+}
+
+func removeRepo(repo string, features []Feature) []Feature {
 	updated := []Feature{}
-	for _, e := range existing {
+	for _, e := range features {
 		if e.Repository != repo {
 			updated = append(updated, e)
 		}
 	}
-	return f.save(updated)
+	return updated
 }
 
 func (f *FileFeatureStore) save(features []Feature) error {
