@@ -76,7 +76,7 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 		}
 	}
 	// install Gloo using Helm
-	helmArgs := []string{"install", filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo)),
+	helmArgs := []string{"install", filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo), "helm"),
 		"-f", glooChartYaml}
 
 	if namespace != "" {

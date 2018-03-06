@@ -22,9 +22,9 @@ const (
 	GlooRepo = "https://github.com/solo-io/gloo.git"
 
 	//GlooChartHash is the commit hash of the Gloo chart used
-	GlooChartHash = "a2f12f82fd41d7b7eab91a2f825fee8f9fdf6ec5"
+	GlooChartHash = "d93964b3c9899ab24aaa714add7e8cb24d9f46e8"
 	//GlooChartRepo is the repository URL for Gloo chart
-	GlooChartRepo = "https://github.com/solo-io/gloo-chart.git"
+	GlooChartRepo = "https://github.com/solo-io/gloo-install.git"
 
 	GlooFuncDiscoveryHash = "644fefd36ce319638b8f4f5bab0ee20fb5a9f94c"
 	GlooFuncDiscoveryRepo = "https://github.com/solo-io/gloo-function-discovery.git"
