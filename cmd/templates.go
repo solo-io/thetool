@@ -6,8 +6,7 @@ import (
 
 const (
 	helmValuesContent = `#custom values for Gloo Helm chart
-#gateway
-gw:
+ingress:
   type: NodePort
   replicaCount: 1
   port: 8080
@@ -15,8 +14,6 @@ gw:
   adminPort: 19000
   image: "{{ .EnvoyImage }}"
   imageTag: {{ .EnvoyTag }}
-  serviceCluster: "envoy"
-  serviceNode: "envoy"
 
 gloo:
   type: NodePort
@@ -25,7 +22,7 @@ gloo:
   image: "{{ .GlooImage }}"
   imageTag: {{ .GlooTag }}
 
-fdiscovery:
+function_discovery:
   type: ClusterIP
   replicaCount: 1
   port: 8080
