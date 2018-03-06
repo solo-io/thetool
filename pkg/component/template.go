@@ -36,7 +36,7 @@ pwd
 go get -u github.com/golang/dep/cmd/dep
 dep ensure -vendor-only
 GOOS=linux CGO_ENABLED=0 go build -o {{ .repoDir }}
-cp {{ .repoDir }} /code/{{ .repoDir }}-out"
+cp {{ .repoDir }} /code/{{ .repoDir }}-out
 EOF
 
 chmod a+rx ./build_user.sh
