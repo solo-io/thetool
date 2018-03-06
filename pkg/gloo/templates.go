@@ -36,7 +36,6 @@ if [ -n "$GIT_SSH_COMMAND" ]; then
 fi
 
 PATH="$PATH"
-git config --global url.git@github.com:.insteadOf https://github.com/
 cd $GOPATH
 mkdir -p -v src/github.com/solo-io
 cd src/github.com/solo-io
