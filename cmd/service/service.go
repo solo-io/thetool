@@ -15,10 +15,10 @@ const (
 
 type Service struct {
 	Name       string `json:"name"`
-	Repository string `json:"repository,omitifempty"`
-	Commit     string `json:"commit,omitifempty"`
-	Image      string `json:"dockerImage,omitifempty"`
-	Tag        string `json:"dockerTag,omitifempty"`
+	Repository string `json:"repository,omitempty"`
+	Commit     string `json:"commit,omitempty"`
+	Image      string `json:"dockerImage,omitempty"`
+	Tag        string `json:"dockerTag,omitempty"`
 	Enable     bool   `json:"enable"`
 	Install    bool   `json:"install"`
 }

@@ -15,10 +15,10 @@ const (
 
 type ManifestFeature struct {
 	Name     string   `json:"name"`
-	GlooDir  string   `json:"gloo,omitifempty"`
-	EnvoyDir string   `json:"envoy,omitifempty"`
-	Enabled  *bool    `json:"enabled,omitifempty"`
-	Tags     []string `json:"tags,omitifempty"`
+	GlooDir  string   `json:"gloo,omitempty"`
+	EnvoyDir string   `json:"envoy,omitempty"`
+	Enabled  *bool    `json:"enabled,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 }
 
 func LoadManifest(folder string) ([]ManifestFeature, error) {
@@ -56,12 +56,12 @@ func ToFeatures(repo, hash string, mf []ManifestFeature) []Feature {
 
 type Feature struct {
 	Name       string   `json:"name"`
-	GlooDir    string   `json:"gloo,omitifempty"`
-	EnvoyDir   string   `json:"envoy,omitifempty"`
+	GlooDir    string   `json:"gloo,omitempty"`
+	EnvoyDir   string   `json:"envoy,omitempty"`
 	Repository string   `json:"repository"`
 	Revision   string   `json:"revision"`
 	Enabled    bool     `json:"enabled"`
-	Tags       []string `json:"tags,omitifempty"`
+	Tags       []string `json:"tags,omitempty"`
 }
 
 type FeatureStore interface {
