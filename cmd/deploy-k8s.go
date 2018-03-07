@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -17,6 +18,7 @@ import (
 
 const (
 	glooChartYaml = "gloo-chart.yaml"
+	bootstrapFile = "gloo-bootstrap.yaml"
 )
 
 func DeployK8SCmd() *cobra.Command {
@@ -68,6 +70,16 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 		if err := generateHelmValues(false, imageTag, dockerUser); err != nil {
 			return errors.Wrap(err, "unable to generate Helm chart values")
 		}
+
+		if err := generateBootstrap(namespace); err != nil {
+			return errors.Wrap(err, "unable to generate pre Helm YAML")
+		}
+	}
+
+	bootstrapArgs := []string{"apply", "-f", bootstrapFile}
+	err = util.RunCmd(verbose, dryRun, "kubectl", bootstrapArgs...)
+	if err != nil {
+		return errors.Wrap(err, "unable to run bootstrap")
 	}
 
 	if !dryRun {
@@ -116,4 +128,11 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 func loadFeatures() ([]feature.Feature, error) {
 	store := &feature.FileFeatureStore{Filename: feature.FeaturesFileName}
 	return store.List()
+}
+
+func generateBootstrap(ns string) error {
+	if ns == "" {
+		ns = "gloo-system"
+	}
+	return ioutil.WriteFile(bootstrapFile, []byte(fmt.Sprintf(bootstrapYaml, ns)), 0644)
 }

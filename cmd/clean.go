@@ -51,6 +51,8 @@ func shouldDelete(f os.FileInfo) bool {
 	switch name {
 	case "gloo-chart.yaml":
 		return true
+	case "gloo-bootstrap.yaml":
+		return true
 	case "cache":
 		return true
 	case "envoy":
