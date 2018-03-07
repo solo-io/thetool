@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/thetool/cmd/service"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/util"
@@ -94,18 +95,17 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 	}
 	defer f.Close()
 
-	features, err := loadFeatures()
+	services, err := service.List()
 	if err != nil {
-		return errors.Wrap(err, "unable to load features")
+		return errors.Wrap(err, "unable to load supporting services")
 	}
 	err = helmValuesTemplate.Execute(f, map[string]interface{}{
-		"EnvoyImage":             user + "/envoy",
-		"EnvoyTag":               imageTag,
-		"GlooImage":              user + "/gloo",
-		"GlooTag":                imageTag,
-		"FunctionDiscoveryImage": user + "/gloo-function-discovery",
-		"FunctionDiscoveryTag":   imageTag,
-		"Features":               features,
+		"EnvoyImage": user + "/envoy",
+		"EnvoyTag":   imageTag,
+		"GlooImage":  user + "/gloo",
+		"GlooTag":    imageTag,
+		"DockerUser": user,
+		"Services":   services,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)

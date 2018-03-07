@@ -26,15 +26,6 @@ const (
 	//GlooChartRepo is the repository URL for Gloo chart
 	GlooChartRepo = "https://github.com/solo-io/gloo-install.git"
 
-	GlooFuncDiscoveryHash = "644fefd36ce319638b8f4f5bab0ee20fb5a9f94c"
-	GlooFuncDiscoveryRepo = "https://github.com/solo-io/gloo-function-discovery.git"
-
-	GlooIngressHash = "99184ba6f4f35f8cfc416538b461deefcd6748bb"
-	GlooIngressRepo = "https://github.com/solo-io/gloo-ingress.git"
-
-	GlooK8SDiscoveryHash = "12b4753e52f6c7ab0d431a30b3f71f0b2caa5ff0"
-	GlooK8SDiscvoeryRepo = "https://github.com/solo-io/gloo-k8s-service-discovery.git"
-
 	// DockerUser is the default Docker registry user used for publishing the images
 	DockerUser = "soloio"
 	// ConfigFile is the name of the configuraiton file
@@ -48,12 +39,6 @@ type Config struct {
 	EnvoyBuilderHash string `json:"envoyBuilderHash"`
 	GlooHash         string `json:"glooHash"`
 	GlooRepo         string `json:"glooRepo"`
-	GlooFuncDHash    string `json:"glooFuncDiscoveryHash"`
-	GlooFuncDRepo    string `json:"glooFuncDiscoveryRepo"`
-	GlooIngressHash  string `json:"glooIngressHash"`
-	GlooIngressRepo  string `json:"glooIngressRepo"`
-	GlooK8SDHash     string `json:"glooK8SDiscoveryHash"`
-	GlooK8SDRepo     string `json:"glooK8SDiscoveryRepo"`
 	GlooChartHash    string `json:"glooChartHash"`
 	GlooChartRepo    string `json:"glooChartRepo"`
 	DockerUser       string `json:"dockerUser,omitempty"`

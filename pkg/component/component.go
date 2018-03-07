@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/solo-io/thetool/cmd/service"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/util"
 
@@ -82,54 +83,33 @@ func init() {
 		},
 	})
 
-	Builders = append(Builders, Builder{
-		Name: "function-discovery",
-		Builder: func(b BuilderConfig) {
-			if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.GlooFuncDRepo, b.Config.GlooFuncDHash, b.Config.WorkDir); err != nil {
-				fmt.Println(err)
-				return
-			}
+	services, err := service.List()
+	if err != nil {
+		// this is possible during init
+		return
+	}
+	for _, s := range services {
+		srv := s // necessary for the way pointers work
+		if srv.Repository != "" && srv.Commit != "" {
+			builder := Builder{
+				Name: srv.Name,
+				Builder: func(b BuilderConfig) {
+					if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
+						srv.Repository, srv.Commit, b.Config.WorkDir); err != nil {
+						fmt.Println(err)
+						return
+					}
 
-			if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
-				b.Config.GlooFuncDRepo, b.Config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
-				fmt.Println(err)
-				return
+					if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
+						srv.Repository, b.Config.WorkDir, srv.ImageTag(), b.DockerUser); err != nil {
+						fmt.Println(err)
+						return
+					}
+				},
 			}
-		},
-	})
-	Builders = append(Builders, Builder{
-		Name: "ingress",
-		Builder: func(b BuilderConfig) {
-			if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.GlooIngressRepo, b.Config.GlooIngressHash, b.Config.WorkDir); err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
-				b.Config.GlooIngressRepo, b.Config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
-				fmt.Println(err)
-				return
-			}
-		},
-	})
-	Builders = append(Builders, Builder{
-		Name: "k8s-discovery",
-		Builder: func(b BuilderConfig) {
-			if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.GlooK8SDRepo, b.Config.GlooK8SDHash, b.Config.WorkDir); err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
-				b.Config.GlooK8SDRepo, b.Config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
-				fmt.Println(err)
-				return
-			}
-		},
-	})
+			Builders = append(Builders, builder)
+		}
+	}
 }
 
 func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir string) error {

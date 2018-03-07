@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/solo-io/thetool/cmd/service"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/spf13/cobra"
@@ -46,13 +47,6 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 	conf.EnvoyBuilderHash = config.EnvoyBuilderHash
 	conf.GlooChartRepo = config.GlooChartRepo
 	conf.GlooChartHash = config.GlooChartHash
-	// Other Gloo components
-	conf.GlooFuncDRepo = config.GlooFuncDiscoveryRepo
-	conf.GlooFuncDHash = config.GlooFuncDiscoveryHash
-	conf.GlooIngressRepo = config.GlooIngressRepo
-	conf.GlooIngressHash = config.GlooIngressHash
-	conf.GlooK8SDRepo = config.GlooK8SDiscvoeryRepo
-	conf.GlooK8SDHash = config.GlooK8SDiscoveryHash
 
 	if err := conf.Save(config.ConfigFile); err != nil {
 		fmt.Printf("unable to save the configuration to %s: %q\n", config.ConfigFile, err)
@@ -76,6 +70,11 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 	featureStore := feature.FileFeatureStore{Filename: feature.FeaturesFileName}
 	if err := featureStore.Init(); err != nil {
 		fmt.Printf("Unable to initialize features file %s: %q\n", feature.FeaturesFileName, err)
+		return
+	}
+
+	if err := service.Init(); err != nil {
+		fmt.Printf("Unable to initialize supporting services file: %q\n", err)
 		return
 	}
 	if !noDefaults {

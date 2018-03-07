@@ -22,17 +22,13 @@ gloo:
   image: "{{ .GlooImage }}"
   imageTag: {{ .GlooTag }}
 
-function_discovery:
-  type: ClusterIP
-  replicaCount: 1
-  port: 8080
-  image: "{{ .FunctionDiscoveryImage }}"
-  imageTag: "{{ .FunctionDiscoveryTag }}"
-  enabled: true 
-
-# features
-{{ range .Features }}
-{{.Name}}_enabled: {{.Enabled}}
+{{ $user := .DockerUser }}
+#  services {{ range .Services }}
+{{.SafeName}}:
+  image: {{if .Image }}{{.Image}}{{else}}{{$user}}/{{.Name}}{{end}}
+  imageTag: {{ .ImageTag}}
+  enable: {{ .Enable}}
+  install: {{ .Install}}
 {{end}}
 `
 )

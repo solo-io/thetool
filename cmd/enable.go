@@ -18,7 +18,7 @@ func EnableCmd() *cobra.Command {
 			return runChangeStatus(featureName, true)
 		},
 	}
-	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to enable")
 	cmd.MarkFlagRequired("name")
 	return cmd
 }
@@ -34,7 +34,7 @@ func DisableCmd() *cobra.Command {
 			return runChangeStatus(featureName, false)
 		},
 	}
-	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to remove")
+	cmd.Flags().StringVarP(&featureName, "name", "n", "", "name of feature to disable")
 	cmd.MarkFlagRequired("name")
 	return cmd
 }

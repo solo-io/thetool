@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/solo-io/thetool/cmd"
+	"github.com/solo-io/thetool/cmd/service"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +26,7 @@ func main() {
 	rootCmd.AddCommand(cmd.BuildCmd())
 	rootCmd.AddCommand(cmd.CleanCmd())
 	rootCmd.AddCommand(cmd.DeployCmd())
+	rootCmd.AddCommand(service.ServiceCmd())
 
 	rootCmd.Execute()
 }

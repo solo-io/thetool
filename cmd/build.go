@@ -13,14 +13,15 @@ import (
 func BuildCmd() *cobra.Command {
 	var jobs int
 	config := component.BuilderConfig{}
+	components := component.Components()
 	cmd := &cobra.Command{
 		Use:   "build [target to build]",
 		Short: "build the universe",
 		Long: `
 Build gloo and its components.
 Supported components are:
-  envoy, gloo, function-discovery, ingress, k8s-discovery or all`,
-		ValidArgs: component.Components(),
+` + strings.Join(components, ", "),
+		ValidArgs: components,
 		Args:      cobra.OnlyValidArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			if len(args) != 1 {
