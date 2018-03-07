@@ -42,7 +42,7 @@ After it you can edit the file to make any changes and continue with --resume fl
 		},
 	}
 	cmd.Flags().BoolVarP(&resume, "resume", "r", false, "resume deployment with existing "+glooChartYaml)
-	cmd.Flags().StringVarP(&namespace, "namespace", "n", "", "namespace to deploy gloo and its components")
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "gloo-system", "namespace to deploy gloo and its components")
 	return cmd
 }
 
