@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/common"
@@ -55,7 +56,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 		// so first create it now so it woudlnt be root
 		bazelcache := filepath.Join(".cache", "bazel")
 		os.MkdirAll(filepath.Join(pwd, bazelcache), 0755)
-		args = append(args, "-v", filepath.Join(pwd, "cache", "envoy")+":"+filepath.Join("/source", bazelcache))
+		v := filepath.Join(pwd, "cache", "envoy") + ":" + filepath.Join("/source", bazelcache)
+		if runtime.GOOS == "darwin" {
+			v = v + ":delegated"
+		}
+		args = append(args, "-v", v)
 	}
 	if sshKeyFile != "" {
 		args = append(args, common.GetSshKeyArgs(sshKeyFile)...)
