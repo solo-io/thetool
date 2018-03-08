@@ -8,6 +8,6 @@ func ServiceCmd() *cobra.Command {
 		Short: "manage supporting services for Gloo",
 	}
 	cmd.AddCommand(enableCmd(), disableCmd(), listCmd(),
-		markInstallCmd(), markUninstallCmd())
+		markInstallCmd(), markConfigOnlyCmd())
 	return cmd
 }

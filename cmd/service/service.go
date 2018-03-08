@@ -20,7 +20,7 @@ type Service struct {
 	Image      string `json:"dockerImage,omitempty"`
 	Tag        string `json:"dockerTag,omitempty"`
 	Enable     bool   `json:"enable"`
-	Install    bool   `json:"install"`
+	ConfigOnly *bool  `json:"configOnly,omitempty"`
 }
 
 var DefaultServices = []*Service{
@@ -33,10 +33,11 @@ var DefaultServices = []*Service{
 	newGlooService("gloo-k8s-service-discovery",
 		"https://github.com/solo-io/gloo-k8s-service-discovery.git",
 		"12b4753e52f6c7ab0d431a30b3f71f0b2caa5ff0"),
+	newNonGlooService("statsd-exporter", "prom/statsd-exporter", "latest"),
 	newNonGlooService("grafana", "grafana/grafana", "4.2.0"),
-	//newNonGlooService("grafana-dashboard", "giantswarm/tiny-tools", ""),
 	newNonGlooService("prometheus", "quay.io/coreos/prometheus", "latest"),
 	newNonGlooService("kube-state-metrics", "gcr.io/google_containers/kube-state-metrics", "v0.5.0"),
+	newNonGlooService("jaeger", "jaegertracing/all-in-one", "latest"),
 }
 
 func newGlooService(name, repo, hash string) *Service {
@@ -45,17 +46,15 @@ func newGlooService(name, repo, hash string) *Service {
 		Repository: repo,
 		Commit:     hash,
 		Enable:     true,
-		Install:    true,
 	}
 }
 
 func newNonGlooService(name, image, tag string) *Service {
 	return &Service{
-		Name:    name,
-		Image:   image,
-		Tag:     tag,
-		Enable:  true,
-		Install: true,
+		Name:   name,
+		Image:  image,
+		Tag:    tag,
+		Enable: false,
 	}
 }
 
@@ -84,7 +83,9 @@ func (s *Service) String() string {
 		fmt.Fprintf(b, "%-12s: %s\n", "Tag", s.Tag)
 	}
 	fmt.Fprintf(b, "%-12s: %v\n", "Enable", s.Enable)
-	fmt.Fprintf(b, "%-12s: %v\n", "Install", s.Install)
+	if s.ConfigOnly != nil {
+		fmt.Fprintf(b, "%-12s: %v\n", "Configure Only", *s.ConfigOnly)
+	}
 
 	return b.String()
 }

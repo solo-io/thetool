@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/solo-io/thetool/cmd/service"
 	"github.com/solo-io/thetool/pkg/downloader"
@@ -58,6 +58,13 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 		return fmt.Errorf("need Docker user for referencing Docker images")
 	}
 
+	if !dryRun {
+		fmt.Printf("Downloading Gloo chart from %s\n", conf.GlooChartRepo)
+		if err := downloader.Download(conf.GlooChartRepo, conf.GlooChartHash, conf.WorkDir, verbose); err != nil {
+			return errors.Wrap(err, "unable to download Gloo chart")
+		}
+	}
+
 	if !resume {
 		enabled, err := loadEnabledFeatures()
 		if err != nil {
@@ -71,8 +78,11 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 			return errors.Wrap(err, "unable to generate Helm chart values")
 		}
 
-		if err := generateBootstrap(namespace); err != nil {
-			return errors.Wrap(err, "unable to generate pre Helm YAML")
+		templateFile := filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo), "helm", "bootstrap.yaml")
+		if !dryRun { // we can only generate the bootstrap if Gloo charts are downloaded
+			if err := generateBootstrap(templateFile, namespace); err != nil {
+				return errors.Wrap(err, "unable to generate pre Helm YAML")
+			}
 		}
 	}
 
@@ -82,12 +92,6 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag, namespace string, 
 		return errors.Wrap(err, "unable to run bootstrap")
 	}
 
-	if !dryRun {
-		fmt.Printf("Downloading Gloo chart from %s\n", conf.GlooChartRepo)
-		if err := downloader.Download(conf.GlooChartRepo, conf.GlooChartHash, conf.WorkDir, verbose); err != nil {
-			return errors.Wrap(err, "unable to download Gloo chart")
-		}
-	}
 	// install Gloo using Helm
 	helmArgs := []string{"install", filepath.Join(
 		conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo), "helm", "gloo"),
@@ -131,9 +135,18 @@ func loadFeatures() ([]feature.Feature, error) {
 	return store.List()
 }
 
-func generateBootstrap(ns string) error {
-	if ns == "" {
-		ns = "gloo-system"
+func generateBootstrap(templateFile, namespace string) error {
+	f, err := os.OpenFile(bootstrapFile, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
 	}
-	return ioutil.WriteFile(bootstrapFile, []byte(fmt.Sprintf(bootstrapYaml, ns)), 0644)
+	defer f.Close()
+	if namespace == "" {
+		namespace = "gloo-system"
+	}
+	t := template.Must(template.ParseFiles(templateFile))
+	t.Execute(f, map[string]string{
+		"Namespace": namespace,
+	})
+	return nil
 }
