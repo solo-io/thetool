@@ -51,9 +51,28 @@ thetool list
 
 Repository:       https://github.com/solo-io/gloo-plugins.git
 Name:             aws_lambda
-gloo Directory:   aws
+Gloo Directory:   aws
 Envoy Directory:  aws/envoy
 Enabled:          true
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             google_functions
+Gloo Directory:   google
+Envoy Directory:  google/envoy
+Enabled:          true
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             kubernetes
+Gloo Directory:   kubernetes
+Envoy Directory:  
+Enabled:          true
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             transformation
+Gloo Directory:   transformation
+Envoy Directory:  transformation/envoy
+Enabled:          true
+
 
 ```
 
@@ -71,9 +90,27 @@ thetool list
 
 Repository:       https://github.com/solo-io/gloo-plugins.git
 Name:             aws_lambda
-gloo Directory:   aws
+Gloo Directory:   aws
 Envoy Directory:  aws/envoy
 Enabled:          false
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             google_functions
+Gloo Directory:   google
+Envoy Directory:  google/envoy
+Enabled:          true
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             kubernetes
+Gloo Directory:   kubernetes
+Envoy Directory:  
+Enabled:          true
+
+Repository:       https://github.com/solo-io/gloo-plugins.git
+Name:             transformation
+Gloo Directory:   transformation
+Envoy Directory:  transformation/envoy
+Enabled:          true
 
 ```
 
