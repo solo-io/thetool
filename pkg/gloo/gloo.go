@@ -23,30 +23,28 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 		return errors.Wrap(err, "unable to write build script")
 	}
 
-	if !dryRun {
-		if err := downloader.Download(glooRepo, glooHash, workDir, verbose); err != nil {
-			return errors.Wrap(err, "unable to download gloo repository")
+	if err := downloader.Download(glooRepo, glooHash, workDir, verbose); err != nil {
+		return errors.Wrap(err, "unable to download gloo repository")
+	}
+	if cache {
+		if err := os.MkdirAll("cache/gloo", 0777); err != nil {
+			return errors.Wrap(err, "unable to create cache directory for gloo")
 		}
-		if cache {
-			if err := os.MkdirAll("cache/gloo", 0777); err != nil {
-				return errors.Wrap(err, "unable to create cache directory for gloo")
-			}
-		}
+	}
 
-		plugins := toGlooPlugins(enabled)
+	plugins := toGlooPlugins(enabled)
 
-		fmt.Println("Adding plugins to Gloo...")
-		pf := filepath.Join(workDir, installFile)
-		if err := installPlugins(plugins,
-			pf, installTemplate); err != nil {
-			return errors.Wrapf(err, "unable to update %s", pf)
-		}
+	fmt.Println("Adding plugins to Gloo...")
+	pf := filepath.Join(workDir, installFile)
+	if err := installPlugins(plugins,
+		pf, installTemplate); err != nil {
+		return errors.Wrapf(err, "unable to update %s", pf)
+	}
 
-		fmt.Println("Constraining plugins to given revisions...")
-		df := filepath.Join(workDir, dependencyFile)
-		if err := updateDep(plugins, df); err != nil {
-			return errors.Wrapf(err, "unable to update to dependencies file %s", df)
-		}
+	fmt.Println("Constraining plugins to given revisions...")
+	df := filepath.Join(workDir, dependencyFile)
+	if err := updateDep(plugins, df); err != nil {
+		return errors.Wrapf(err, "unable to update to dependencies file %s", df)
 	}
 	// let's build it all in Docker
 	// create output directory
