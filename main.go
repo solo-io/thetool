@@ -17,6 +17,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(cmd.InitCmd())
+	rootCmd.AddCommand(cmd.ConfigureCmd())
 	rootCmd.AddCommand(cmd.ListReposCmd())
 	rootCmd.AddCommand(cmd.AddCmd())
 	rootCmd.AddCommand(cmd.DeleteCmd())
