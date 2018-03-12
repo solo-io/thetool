@@ -27,8 +27,11 @@ func GetSshKeyArgs(sshkey string) []string {
 
 func CreateUserTemplate(homedir string) string {
 	return `
+if [ -n "$THETOOL_UID" ]; then
 groupadd --gid $THETOOL_GID -f thetoolgroup
 useradd -o --uid $THETOOL_UID --gid $THETOOL_GID --no-create-home --home-dir ` + homedir + ` thetool
+fi
+
 `
 }
 

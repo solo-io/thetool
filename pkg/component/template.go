@@ -40,7 +40,11 @@ cp {{ .repoDir }} /code/{{ .repoDir }}-out
 EOF
 
 chmod a+rx ./build_user.sh
+if [ -n "$THETOOL_UID" ]; then
 su thetool -c ./build_user.sh
+else
+bash -c ./build_user.sh
+endif
 `
 )
 
