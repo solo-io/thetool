@@ -23,7 +23,7 @@ gloo:
   imageTag: {{ .GlooTag }}
 
 {{ $user := .DockerUser }}
-#  services {{ range .Services }}
+#  add-ons {{ range .Services }}
 {{.SafeName}}:
   image: {{if .Image }}{{.Image}}{{else}}{{$user}}/{{.Name}}{{end}}
   imageTag: {{ .ImageTag}}

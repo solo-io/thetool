@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -15,10 +16,19 @@ import (
 )
 
 func RunCmd(verbose, dryRun bool, binary string, args ...string) error {
-	return RunCmdContext(nil, verbose, dryRun, binary, args...)
+	return RunCmdContext(nil, verbose, dryRun, os.Stdout, binary, args...)
 }
 
-func RunCmdContext(ctx context.Context, verbose, dryRun bool, binary string, args ...string) error {
+func RunCmdCaptureOut(verbose, dryRun bool, binary string, args ...string) (*bytes.Buffer, error) {
+	b := &bytes.Buffer{}
+	err := RunCmdContext(nil, verbose, dryRun, b, binary, args...)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func RunCmdContext(ctx context.Context, verbose, dryRun bool, w io.Writer, binary string, args ...string) error {
 	if verbose {
 		fmt.Println(binary, args)
 	}
@@ -39,9 +49,8 @@ func RunCmdContext(ctx context.Context, verbose, dryRun bool, binary string, arg
 		}
 		stdoutScanner := bufio.NewScanner(cmdStdout)
 		go func() {
-			prefix := binary + ": "
 			for stdoutScanner.Scan() {
-				fmt.Println(prefix, stdoutScanner.Text())
+				fmt.Fprintln(w, stdoutScanner.Text())
 			}
 		}()
 
@@ -73,7 +82,7 @@ func DockerRun(verbose, dryRun bool, containerName string, args ...string) error
 	if dryRun {
 		defer cancel()
 	}
-	return RunCmdContext(ctx, verbose, dryRun, "docker", args...)
+	return RunCmdContext(ctx, verbose, dryRun, os.Stdout, "docker", args...)
 }
 
 func dockerContext(containerName string) (context.Context, context.CancelFunc) {
