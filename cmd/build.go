@@ -32,7 +32,7 @@ Supported components are:
 		},
 	}
 	flags := cmd.Flags()
-	flags.BoolVarP(&config.Verbose, "verbose", "v", false, "show verbose build log")
+	flags.BoolVarP(&config.Verbose, "verbose", "v", true, "show verbose build log")
 	flags.BoolVarP(&config.DryRun, "dry-run", "d", false, "dry run; only generate build file")
 	flags.BoolVar(&config.UseCache, "cache", true, "use cache for builds")
 	flags.BoolVarP(&config.PublishImage, "publish", "p", true, "publish Docker images to registry")
