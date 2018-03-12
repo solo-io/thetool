@@ -1,4 +1,4 @@
-package service
+package addon
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 func listCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "list supporting services",
+		Short: "list addons",
 		Run: func(c *cobra.Command, args []string) {
 			runList()
 		},
@@ -18,12 +18,12 @@ func listCmd() *cobra.Command {
 }
 
 func runList() {
-	services, err := load(serviceFilename)
+	addons, err := load(addonFilename)
 	if err != nil {
-		fmt.Printf("Unable to load services %q\n", err)
+		fmt.Printf("Unable to load addons %q\n", err)
 		return
 	}
-	for _, s := range services {
-		fmt.Println(s)
+	for _, a := range addons {
+		fmt.Println(a)
 	}
 }

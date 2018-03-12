@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/solo-io/thetool/cmd/service"
+	"github.com/solo-io/thetool/cmd/addon"
 	"github.com/solo-io/thetool/pkg/config"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/spf13/cobra"
@@ -73,8 +73,8 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 		return
 	}
 
-	if err := service.Init(); err != nil {
-		fmt.Printf("Unable to initialize supporting services file: %q\n", err)
+	if err := addon.Init(); err != nil {
+		fmt.Printf("Unable to initialize supporting addons file: %q\n", err)
 		return
 	}
 	if !noDefaults {

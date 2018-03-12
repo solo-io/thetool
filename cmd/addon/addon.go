@@ -1,4 +1,4 @@
-package service
+package addon
 
 import (
 	"bytes"
@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	serviceFilename = "services.json"
+	addonFilename = "addons.json"
 )
 
-type Service struct {
+type Addon struct {
 	Name       string `json:"name"`
 	Repository string `json:"repository,omitempty"`
 	Commit     string `json:"commit,omitempty"`
@@ -23,25 +23,25 @@ type Service struct {
 	ConfigOnly *bool  `json:"configOnly,omitempty"`
 }
 
-var DefaultServices = []*Service{
-	newGlooService("gloo-function-discovery",
+var DefaultAddons = []*Addon{
+	newGlooAddon("gloo-function-discovery",
 		"https://github.com/solo-io/gloo-function-discovery.git",
 		"644fefd36ce319638b8f4f5bab0ee20fb5a9f94c"),
-	newGlooService("gloo-ingress-controller",
+	newGlooAddon("gloo-ingress-controller",
 		"https://github.com/solo-io/gloo-ingress-controller.git",
 		"90f2b216178ce58fe7dc9e1049e91d37f9a234fe"),
-	newGlooService("gloo-k8s-service-discovery",
+	newGlooAddon("gloo-k8s-service-discovery",
 		"https://github.com/solo-io/gloo-k8s-service-discovery.git",
 		"12b4753e52f6c7ab0d431a30b3f71f0b2caa5ff0"),
-	newNonGlooService("statsd-exporter", "prom/statsd-exporter", "latest"),
-	newNonGlooService("grafana", "grafana/grafana", "4.2.0"),
-	newNonGlooService("prometheus", "quay.io/coreos/prometheus", "latest"),
-	newNonGlooService("kube-state-metrics", "gcr.io/google_containers/kube-state-metrics", "v0.5.0"),
-	newNonGlooService("jaeger", "jaegertracing/all-in-one", "latest"),
+	newNonGlooAddon("statsd-exporter", "prom/statsd-exporter", "latest"),
+	newNonGlooAddon("grafana", "grafana/grafana", "4.2.0"),
+	newNonGlooAddon("prometheus", "quay.io/coreos/prometheus", "latest"),
+	newNonGlooAddon("kube-state-metrics", "gcr.io/google_containers/kube-state-metrics", "v0.5.0"),
+	newNonGlooAddon("jaeger", "jaegertracing/all-in-one", "latest"),
 }
 
-func newGlooService(name, repo, hash string) *Service {
-	return &Service{
+func newGlooAddon(name, repo, hash string) *Addon {
+	return &Addon{
 		Name:       name,
 		Repository: repo,
 		Commit:     hash,
@@ -49,8 +49,8 @@ func newGlooService(name, repo, hash string) *Service {
 	}
 }
 
-func newNonGlooService(name, image, tag string) *Service {
-	return &Service{
+func newNonGlooAddon(name, image, tag string) *Addon {
+	return &Addon{
 		Name:   name,
 		Image:  image,
 		Tag:    tag,
@@ -58,11 +58,11 @@ func newNonGlooService(name, image, tag string) *Service {
 	}
 }
 
-func (s *Service) SafeName() string {
+func (s *Addon) SafeName() string {
 	replacer := strings.NewReplacer("-", "_", ".", "_")
 	return replacer.Replace(s.Name)
 }
-func (s *Service) ImageTag() string {
+func (s *Addon) ImageTag() string {
 	if s.Tag != "" {
 		return s.Tag
 	}
@@ -71,7 +71,7 @@ func (s *Service) ImageTag() string {
 	}
 	return ""
 }
-func (s *Service) String() string {
+func (s *Addon) String() string {
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "%-12s: %s\n", "Name", s.Name)
 	if s.Repository != "" {
@@ -91,25 +91,25 @@ func (s *Service) String() string {
 }
 
 func Init() error {
-	return save(serviceFilename, DefaultServices)
+	return save(addonFilename, DefaultAddons)
 }
 
-func List() ([]*Service, error) {
-	return load(serviceFilename)
+func List() ([]*Addon, error) {
+	return load(addonFilename)
 }
 
-// save and load; move to it to pkg/service?
-type serviceFile struct {
-	Date        time.Time  `json:"date"`
-	GeneratedBy string     `json:"generatedBy"`
-	Services    []*Service `json:"services"`
+// save and load; move to it to pkg/addon?
+type addonFile struct {
+	Date        time.Time `json:"date"`
+	GeneratedBy string    `json:"generatedBy"`
+	Addons      []*Addon  `json:"addons"`
 }
 
-func save(filename string, services []*Service) error {
-	b, err := json.MarshalIndent(serviceFile{
+func save(filename string, addons []*Addon) error {
+	b, err := json.MarshalIndent(addonFile{
 		Date:        time.Now(),
 		GeneratedBy: "thetool",
-		Services:    services,
+		Addons:      addons,
 	}, "", " ")
 	if err != nil {
 		return err
@@ -118,15 +118,15 @@ func save(filename string, services []*Service) error {
 	return ioutil.WriteFile(filename, b, 0644)
 }
 
-func load(filename string) ([]*Service, error) {
+func load(filename string) ([]*Addon, error) {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	sf := &serviceFile{}
+	sf := &addonFile{}
 	err = json.Unmarshal(b, sf)
 	if err != nil {
 		return nil, err
 	}
-	return sf.Services, nil
+	return sf.Addons, nil
 }

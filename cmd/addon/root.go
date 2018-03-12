@@ -1,11 +1,11 @@
-package service
+package addon
 
 import "github.com/spf13/cobra"
 
-func ServiceCmd() *cobra.Command {
+func AddonCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "service",
-		Short: "manage supporting services for Gloo",
+		Use:   "addon",
+		Short: "manage addons for Gloo",
 	}
 	cmd.AddCommand(enableCmd(), disableCmd(), listCmd(),
 		markInstallCmd(), markConfigOnlyCmd())

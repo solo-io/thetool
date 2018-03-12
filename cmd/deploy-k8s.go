@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/solo-io/thetool/cmd/service"
+	"github.com/solo-io/thetool/cmd/addon"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
 	"github.com/solo-io/thetool/pkg/util"
@@ -155,9 +155,9 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 	}
 	defer f.Close()
 
-	services, err := service.List()
+	addons, err := addon.List()
 	if err != nil {
-		return errors.Wrap(err, "unable to load supporting services")
+		return errors.Wrap(err, "unable to load addons")
 	}
 	err = helmValuesTemplate.Execute(f, map[string]interface{}{
 		"EnvoyImage": user + "/envoy",
@@ -165,7 +165,7 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 		"GlooImage":  user + "/gloo",
 		"GlooTag":    imageTag,
 		"DockerUser": user,
-		"Services":   services,
+		"Addons":     addons,
 	})
 	if err != nil {
 		return errors.Wrap(err, "unable to write file: "+filename)

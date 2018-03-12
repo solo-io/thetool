@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/solo-io/thetool/cmd/service"
+	"github.com/solo-io/thetool/cmd/addon"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/util"
 
@@ -83,13 +83,13 @@ func init() {
 		},
 	})
 
-	services, err := service.List()
+	addons, err := addon.List()
 	if err != nil {
 		// this is possible during init
 		return
 	}
-	for _, s := range services {
-		srv := s // necessary for the way pointers work
+	for _, a := range addons {
+		srv := a // necessary for the way pointers work
 		if srv.Repository != "" && srv.Commit != "" {
 			builder := Builder{
 				Name: srv.Name,
