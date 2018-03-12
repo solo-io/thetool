@@ -83,18 +83,20 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 func Publish(verbose, dryRun, publish bool, workDir, imageTag, user string) error {
 	fmt.Println("Publishing Gloo...")
 
-	if err := util.Copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
-		return errors.Wrap(err, "not able to copy the Dockerfile")
-	}
-	oldDir, err := os.Getwd()
-	if err != nil {
-		return errors.Wrap(err, "not able to get working directory")
-	}
-	if err := os.Chdir("gloo-out"); err != nil {
-		return errors.Wrap(err, "unable to change working directory to gloo-out")
-	}
-	defer os.Chdir(oldDir)
+	if !dryRun {
+		if err := util.Copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
+			return errors.Wrap(err, "not able to copy the Dockerfile")
+		}
 
+		oldDir, err := os.Getwd()
+		if err != nil {
+			return errors.Wrap(err, "not able to get working directory")
+		}
+		if err := os.Chdir("gloo-out"); err != nil {
+			return errors.Wrap(err, "unable to change working directory to gloo-out")
+		}
+		defer os.Chdir(oldDir)
+	}
 	tag := user + "/gloo:" + imageTag
 	buildArgs := []string{
 		"build",
