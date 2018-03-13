@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	helmValuesContent = `#custom values for Gloo Helm chart
+	helmValuesContent = `#values for Gloo Helm chart
 ingress:
   type: NodePort
   replicaCount: 1
@@ -14,6 +14,7 @@ ingress:
   adminPort: 19000
   image: "{{ .EnvoyImage }}"
   imageTag: {{ .EnvoyTag }}
+  imagePullPolicy: IfNotPresent
 
 gloo:
   type: NodePort
@@ -21,12 +22,14 @@ gloo:
   port: 8081
   image: "{{ .GlooImage }}"
   imageTag: {{ .GlooTag }}
+  imagePullPolicy: IfNotPresent
 
 {{ $user := .DockerUser }}
 #  add-ons {{ range .Addons }}
 {{.SafeName}}:
   image: {{if .Image }}{{.Image}}{{else}}{{$user}}/{{.Name}}{{end}}
   imageTag: {{ .ImageTag}}
+  imagePullPolicy: IfNotPresent
   enable: {{ .Enable}}
   {{if .ConfigOnly}}configOnly: {{ .ConfigOnly }}{{end}}
 {{end}}
