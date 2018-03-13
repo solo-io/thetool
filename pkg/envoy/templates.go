@@ -14,13 +14,16 @@ var (
 	buildScript = `#!/bin/bash
 
 set -ex
-` + common.CreateUserTemplate("/source") + `
+` + common.CreateUserTemplate("/home/thetool") + `
 ` + common.PrepareKeyTemplate + `
 
 if [ -f "/etc/github/id_rsa" ]; 
 then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
+
+mkdir -p /home/thetool
+chown -R thetool /home/thetool
 
 # create a script to run in su 
 cat << EOF > build_user.sh

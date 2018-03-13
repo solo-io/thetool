@@ -41,7 +41,6 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 			return errors.Wrap(err, "unable to create cache for envoy")
 		}
 	}
-	// docker run -t -i -v "$PWD":/source envoyproxy/envoy-build-ubuntu /bin/bash -lc "cd /source && bazel build -c dbg //:envoy"
 	pwd, err := os.Getwd()
 	if err != nil {
 		return errors.Wrap(err, "unable to get working directory")
@@ -49,14 +48,18 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 	srcDir := filepath.Join(pwd, buildDir)
 	name := "thetool-envoy"
 	args := []string{"run", "-i", "--rm", "--name", name,
-		"-v", srcDir + ":/source",
 		"-v", filepath.Join(pwd, wDir) + ":/repositories"}
+	if runtime.GOOS == "darwin" {
+		args = append(args, "-v", srcDir+":/source:delegated")
+	} else {
+		args = append(args, "-v", srcDir+":/source")
+	}
 	if cache {
 		// since the source in also mounted as a volume, this directory will be created as root in,
 		// so first create it now so it woudlnt be root
 		bazelcache := filepath.Join(".cache", "bazel")
 		os.MkdirAll(filepath.Join(pwd, bazelcache), 0755)
-		v := filepath.Join(pwd, "cache", "envoy") + ":" + filepath.Join("/source", bazelcache)
+		v := filepath.Join(pwd, "cache", "envoy") + ":" + filepath.Join("/home/thetool", bazelcache)
 		if runtime.GOOS == "darwin" {
 			v = v + ":delegated"
 		}
