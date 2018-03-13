@@ -71,9 +71,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, e
 
 	uargs, err := common.GetUidArgs()
 	if err != nil {
-		return err
+		// doesn't return current user in Jenkins
+		fmt.Println("warning: unable to get current user id:", err)
+	} else {
+		args = append(args, uargs...)
 	}
-	args = append(args, uargs...)
 	args = append(args, "envoyproxy/envoy-build-ubuntu@sha256:"+buildContainerHash, "/source/build-envoy.sh")
 
 	err = util.DockerRun(verbose, dryRun, name, args...)

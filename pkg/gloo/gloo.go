@@ -68,9 +68,11 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 	}
 	uargs, err := common.GetUidArgs()
 	if err != nil {
-		return err
+		// doesn't return current user in Jenkins
+		fmt.Println("warning: unable to get current user id:", err)
+	} else {
+		args = append(args, uargs...)
 	}
-	args = append(args, uargs...)
 
 	args = append(args, "golang:1.10", "/gloo/build-gloo.sh")
 	err = util.DockerRun(verbose, dryRun, name, args...)
