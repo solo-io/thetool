@@ -117,11 +117,10 @@ func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir s
 	fmt.Printf("Building %s...\n", name)
 	scriptFilename := fmt.Sprintf("build-%s.sh", name)
 	generateBuildScript(scriptFilename, workDir, repo)
+	if err := downloader.Download(repo, hash, workDir, verbose); err != nil {
+		return errors.Wrapf(err, "unable to download %s repository", name)
+	}
 	if !dryRun {
-		if err := downloader.Download(repo, hash, workDir, verbose); err != nil {
-			return errors.Wrapf(err, "unable to download %s repository", name)
-		}
-
 		if useCache {
 			if err := os.MkdirAll(filepath.Join("cache", name), 0755); err != nil {
 				return errors.Wrap(err, "unable to create cache directory for "+name)
