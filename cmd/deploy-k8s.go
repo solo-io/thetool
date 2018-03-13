@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
 	"github.com/solo-io/thetool/cmd/addon"
@@ -23,6 +24,10 @@ const (
 	glooChartYaml = "gloo-chart.yaml"
 	bootstrapFile = "gloo-bootstrap.yaml"
 	installFile   = "install.yaml"
+)
+
+var (
+	releaseRegex = regexp.MustCompile("\\s+release: RELEASE-NAME")
 )
 
 type k8sDeployOptions struct {
@@ -115,6 +120,7 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 		content := b.Bytes()
 		if options.releaseName == "" {
 			content = bytes.Replace(content, []byte("RELEASE-NAME-"), []byte(""), -1)
+			content = releaseRegex.ReplaceAll(content, []byte{})
 		}
 
 		buffer := &bytes.Buffer{}
