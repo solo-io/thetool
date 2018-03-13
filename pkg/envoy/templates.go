@@ -22,8 +22,10 @@ then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
-mkdir -p /home/thetool
-chown -R thetool /home/thetool
+if [ -n "$THETOOL_UID" ]; then
+  mkdir -p /home/thetool
+  chown -R thetool /home/thetool
+fi
 
 # create a script to run in su 
 cat << EOF > build_user.sh

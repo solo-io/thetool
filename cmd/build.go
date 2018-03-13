@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -31,10 +32,12 @@ Supported components are:
 			return runBuild(jobs, config, target)
 		},
 	}
+	// don't use cache by default on mac
+	enableCache := runtime.GOOS != "darwin"
 	flags := cmd.Flags()
 	flags.BoolVarP(&config.Verbose, "verbose", "v", true, "show verbose build log")
 	flags.BoolVarP(&config.DryRun, "dry-run", "d", false, "dry run; only generate build file")
-	flags.BoolVar(&config.UseCache, "cache", true, "use cache for builds")
+	flags.BoolVar(&config.UseCache, "cache", enableCache, "use cache for builds")
 	flags.BoolVarP(&config.PublishImage, "publish", "p", true, "publish Docker images to registry")
 	flags.StringVarP(&config.ImageTag, "image-tag", "t", "", "tag for Docker images; uses auto-generated hash if empty")
 	flags.StringVarP(&config.DockerUser, "docker-user", "u", "", "Docker user for publishing images")
