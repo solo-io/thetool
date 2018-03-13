@@ -26,7 +26,7 @@ type Addon struct {
 var DefaultAddons = []*Addon{
 	newGlooAddon("gloo-function-discovery",
 		"https://github.com/solo-io/gloo-function-discovery.git",
-		"644fefd36ce319638b8f4f5bab0ee20fb5a9f94c"),
+		"51580349b03ece51bcd50997969584d143f6422b"),
 	newGlooAddon("gloo-ingress-controller",
 		"https://github.com/solo-io/gloo-ingress-controller.git",
 		"90f2b216178ce58fe7dc9e1049e91d37f9a234fe"),
