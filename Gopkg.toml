@@ -23,3 +23,6 @@
 [[constraint]]
   name = "github.com/spf13/cobra"
   revision = "c6c44e6fdcc30161c7f4480754da7230d01c06e3"
+[[constraint]]
+  name = "gopkg.in/AlecAivazis/survey.v1"
+  version = "1.5.1"

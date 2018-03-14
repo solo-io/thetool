@@ -7,7 +7,6 @@ func AddonCmd() *cobra.Command {
 		Use:   "addon",
 		Short: "manage addons for Gloo",
 	}
-	cmd.AddCommand(enableCmd(), disableCmd(), listCmd(),
-		markInstallCmd(), markConfigOnlyCmd())
+	cmd.AddCommand(listCmd(), configureCmd())
 	return cmd
 }

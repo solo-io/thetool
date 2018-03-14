@@ -42,7 +42,7 @@ func runMarkInstall(addonName string, configOnly bool) {
 	}
 	for _, a := range addons {
 		if a.Name == addonName {
-			a.ConfigOnly = &configOnly
+			//a.ConfigOnly = &configOnly
 		}
 	}
 

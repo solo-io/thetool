@@ -27,11 +27,11 @@ gloo:
 {{ $user := .DockerUser }}
 #  add-ons {{ range .Addons }}
 {{.SafeName}}:
-  image: {{if .Image }}{{.Image}}{{else}}{{$user}}/{{.Name}}{{end}}
-  imageTag: {{ .ImageTag}}
-  imagePullPolicy: IfNotPresent
-  enable: {{ .Enable}}
-  {{if .ConfigOnly}}configOnly: {{ .ConfigOnly }}{{end}}
+  {{if .Repository }}image: {{$user}}/{{.Name}}
+  imageTag: {{ .ImageTag }}
+  {{end}}imagePullPolicy: IfNotPresent
+  enable: {{ .Enable}}{{range $k, $v := .Configuration }}
+  {{$k}}: {{$v}}{{end}}
 {{end}}
 `
 )

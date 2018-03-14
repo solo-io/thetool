@@ -13,16 +13,20 @@ const (
 	addonFilename = "addons.json"
 )
 
+type configurator interface {
+	configure(*Addon)
+}
 type Addon struct {
-	Name       string `json:"name"`
-	Repository string `json:"repository,omitempty"`
-	Commit     string `json:"commit,omitempty"`
-	Image      string `json:"dockerImage,omitempty"`
-	Tag        string `json:"dockerTag,omitempty"`
-	Enable     bool   `json:"enable"`
-	ConfigOnly *bool  `json:"configOnly,omitempty"`
+	Name          string            `json:"name"`
+	Repository    string            `json:"repository,omitempty"`
+	Commit        string            `json:"commit,omitempty"`
+	Image         string            `json:"dockerImage,omitempty"`
+	Tag           string            `json:"dockerTag,omitempty"`
+	Enable        bool              `json:"enable"`
+	Configuration map[string]string `json:"configuration,omitempty"`
 }
 
+var configuratorMap map[string]configurator = make(map[string]configurator)
 var DefaultAddons = []*Addon{
 	newGlooAddon("gloo-function-discovery",
 		"https://github.com/solo-io/gloo-function-discovery.git",
@@ -33,14 +37,12 @@ var DefaultAddons = []*Addon{
 	newGlooAddon("gloo-k8s-service-discovery",
 		"https://github.com/solo-io/gloo-k8s-service-discovery.git",
 		"12b4753e52f6c7ab0d431a30b3f71f0b2caa5ff0"),
-	newNonGlooAddon("statsd-exporter", "prom/statsd-exporter", "latest"),
-	newNonGlooAddon("grafana", "grafana/grafana", "4.2.0"),
-	newNonGlooAddon("prometheus", "quay.io/coreos/prometheus", "latest"),
-	newNonGlooAddon("kube-state-metrics", "gcr.io/google_containers/kube-state-metrics", "v0.5.0"),
-	newNonGlooAddon("jaeger", "jaegertracing/all-in-one", "latest"),
+	tracingAddon(),
+	metricsAddon(),
 }
 
 func newGlooAddon(name, repo, hash string) *Addon {
+	configuratorMap[name] = EnableDisable{}
 	return &Addon{
 		Name:       name,
 		Repository: repo,
@@ -49,12 +51,31 @@ func newGlooAddon(name, repo, hash string) *Addon {
 	}
 }
 
-func newNonGlooAddon(name, image, tag string) *Addon {
+func tracingAddon() *Addon {
+	name := "opentracing"
+	configuratorMap[name] = TracingConfigurator{}
 	return &Addon{
 		Name:   name,
-		Image:  image,
-		Tag:    tag,
 		Enable: false,
+		Configuration: map[string]string{
+			"jaeger": "jaegertracing/all-in-one:latest",
+			"status": "install",
+		},
+	}
+}
+
+func metricsAddon() *Addon {
+	name := "metrics"
+	configuratorMap[name] = MetricsConfigurator{}
+	return &Addon{
+		Name:   name,
+		Enable: false,
+		Configuration: map[string]string{
+			"statsd-exporter": "prom/statsd-exporter:latest",
+			"grafana":         "grafana/grafana:4.2.0",
+			"prometheus":      "quay.io/coreos/prometheus:latest",
+			"status":          "install",
+		},
 	}
 }
 
@@ -83,10 +104,12 @@ func (s *Addon) String() string {
 		fmt.Fprintf(b, "%-12s: %s\n", "Tag", s.Tag)
 	}
 	fmt.Fprintf(b, "%-12s: %v\n", "Enable", s.Enable)
-	if s.ConfigOnly != nil {
-		fmt.Fprintf(b, "%-12s: %v\n", "Configure Only", *s.ConfigOnly)
+	if s.Enable && s.Configuration != nil {
+		status, ok := s.Configuration["status"]
+		if ok {
+			fmt.Fprintf(b, "%-12s: %s\n", "Status", status)
+		}
 	}
-
 	return b.String()
 }
 
@@ -96,6 +119,18 @@ func Init() error {
 
 func List() ([]*Addon, error) {
 	return load(addonFilename)
+}
+
+func addonNames() []string {
+	addons, err := List()
+	if err != nil {
+		return []string{}
+	}
+	names := make([]string, len(addons))
+	for i, a := range addons {
+		names[i] = a.Name
+	}
+	return names
 }
 
 // save and load; move to it to pkg/addon?
