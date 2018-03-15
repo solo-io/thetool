@@ -13,7 +13,7 @@ ingress:
   securePort: 8443
   adminPort: 19000
   image: "{{ .EnvoyImage }}"
-  imageTag: {{ .EnvoyTag }}
+  imageTag: "{{ .EnvoyTag }}"
   imagePullPolicy: IfNotPresent
 
 gloo:
@@ -21,14 +21,14 @@ gloo:
   replicaCount: 1
   port: 8081
   image: "{{ .GlooImage }}"
-  imageTag: {{ .GlooTag }}
+  imageTag: "{{ .GlooTag }}"
   imagePullPolicy: IfNotPresent
 
 {{ $user := .DockerUser }}
 #  add-ons {{ range .Addons }}
 {{.SafeName}}:
-  {{if .Repository }}image: {{$user}}/{{.Name}}
-  imageTag: {{ .ImageTag }}
+  {{if .Repository }}image: "{{$user}}/{{.Name}}"
+  imageTag: "{{ .ImageTag }}"
   {{end}}imagePullPolicy: IfNotPresent
   enable: {{ .Enable}}{{range $k, $v := .Configuration }}
   {{$k}}: {{$v}}{{end}}
