@@ -132,6 +132,7 @@ thetool build all --publish=false
 
 Note: In order to deploy gloo to Kubernetes, you need to publish the Docker images.
 
+> When building Envoy, [Bazel](https://bazel.build) build can fail with the error message: `gcc: internal compiler error: Killed (program cc1plus)`, if the virtual machine is out of memory. You can fix it by either reducing the number of cores or increasing the RAM on Docker VM. You can set the VM to 2GB RAM and 2 CPUs for a working configuration.
 
 ### Deploy
 
