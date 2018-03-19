@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"strings"
 
+	"os"
+
 	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/downloader"
 	"github.com/solo-io/thetool/pkg/feature"
@@ -39,7 +41,7 @@ fi
 cd /source
 mkdir -p prebuilt
 cd prebuilt
-curl -L -o BUILD https://raw.githubusercontent.com/envoyproxy/envoy/%s/ci/prebuilt/BUILD
+curl -L -o BUILD https://raw.githubusercontent.com/{{ envoyOrg }}/envoy/%s/ci/prebuilt/BUILD
 ln -sf /thirdparty .
 ln -sf /thirdparty_build .
 cd /source
@@ -133,7 +135,7 @@ cc_library(
 http_archive(
     name = "envoy",
     strip_prefix = "envoy-{{ envoyHash }}",
-    url = "https://github.com/envoyproxy/envoy/archive/{{ envoyHash }}.zip",
+    url = "https://github.com/{{ envoyOrg }}/envoy/archive/{{ envoyHash }}.zip",
 )
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
@@ -166,14 +168,26 @@ var (
 	workspaceTemplate *template.Template
 
 	envoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
+	envoyOrg  = "envoyproxy"
 	workDir   = "repositories"
 )
 
 func init() {
 	buildTemplate = template.Must(template.New("build").Parse(buildContent))
 	funcMap := template.FuncMap{
-		"path":      path,
-		"envoyHash": func() string { return envoyHash },
+		"path": path,
+		"envoyHash": func() string {
+			if h := os.Getenv("ENVOY_HASH"); h != "" {
+				return h
+			}
+			return envoyHash
+		},
+		"envoyOrg": func() string {
+			if h := os.Getenv("ENVOY_ORG"); h != "" {
+				return h
+			}
+			return envoyOrg
+		},
 	}
 	workspaceTemplate = template.Must(template.New("workspace").
 		Funcs(funcMap).Parse(workspaceContent))
