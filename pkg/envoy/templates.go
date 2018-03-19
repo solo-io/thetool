@@ -89,7 +89,7 @@ bind(
     actual = "//external:ssl",
 )
 
-ENVOY_COMMON_SHA = "ee625c53848d990dd7e5b87c5fbcd2776054e9f8"  # Feb 26, 2018 (split metadata accessor)
+ENVOY_COMMON_SHA = "efc95e928b9fd4137959ad5e9720586c898d2231"  # Mar 19, 2018 (functions: allow passthrough if htere is no function found on route)
 
 # load solo common
 http_archive(
