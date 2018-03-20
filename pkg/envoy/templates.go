@@ -41,7 +41,7 @@ fi
 cd /source
 mkdir -p prebuilt
 cd prebuilt
-curl -L -o BUILD https://raw.githubusercontent.com/{{ envoyOrg }}/envoy/%s/ci/prebuilt/BUILD
+curl -L -o BUILD https://raw.githubusercontent.com/` + envoyOrg() + `/envoy/%s/ci/prebuilt/BUILD
 ln -sf /thirdparty .
 ln -sf /thirdparty_build .
 cd /source
@@ -168,9 +168,15 @@ var (
 	workspaceTemplate *template.Template
 
 	envoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
-	envoyOrg  = "envoyproxy"
 	workDir   = "repositories"
 )
+
+func envoyOrg() string {
+	if h := os.Getenv("ENVOY_ORG"); h != "" {
+		return h
+	}
+	return "envoyproxy"
+}
 
 func init() {
 	buildTemplate = template.Must(template.New("build").Parse(buildContent))
@@ -182,12 +188,7 @@ func init() {
 			}
 			return envoyHash
 		},
-		"envoyOrg": func() string {
-			if h := os.Getenv("ENVOY_ORG"); h != "" {
-				return h
-			}
-			return envoyOrg
-		},
+		"envoyOrg": envoyOrg,
 	}
 	workspaceTemplate = template.Must(template.New("workspace").
 		Funcs(funcMap).Parse(workspaceContent))
