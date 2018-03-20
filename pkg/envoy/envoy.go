@@ -1,12 +1,14 @@
 package envoy
 
 import (
+	"bytes"
 	"fmt"
-	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/thetool/pkg/common"
@@ -20,22 +22,29 @@ const (
 	buildDir      = "envoy"
 )
 
-func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, wDir, buildContainerHash string) error {
+func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, eHash, commonHash, repoUser, wDir, buildContainerHash string) error {
 	fmt.Println("Building Envoy...")
 	// create directories
 	os.Mkdir(buildDir, 0777)
 	os.Mkdir(filepath.Join(buildDir, "envoy-out"), 0777)
-	envoyHash = eHash
-	features := envoyFilters(enabled)
-	if err := generateFromTemplate(features, filepath.Join(buildDir, buildFile), buildTemplate); err != nil {
+	data := templateData{}
+	data.Features = envoyFilters(enabled)
+	data.EnvoyCommonHash = commonHash
+	data.EnvoyHash = eHash
+	data.EnvoyRepoUser = repoUser
+	if err := generateFromTemplate(filepath.Join(buildDir, buildFile), buildTemplate, data); err != nil {
 		return err
 	}
-	if err := generateFromTemplate(features, filepath.Join(buildDir, workspaceFile), workspaceTemplate); err != nil {
+	if err := generateFromTemplate(filepath.Join(buildDir, workspaceFile), workspaceTemplate, data); err != nil {
 		return err
 	}
 
 	// run build in docker
-	ioutil.WriteFile(filepath.Join(buildDir, "build-envoy.sh"), []byte(fmt.Sprintf(buildScript, envoyHash)), 0755)
+	buffer := &bytes.Buffer{}
+	fromTemplate(buffer, buildScriptTemplate, data)
+	if err := ioutil.WriteFile(filepath.Join(buildDir, "build-envoy.sh"), buffer.Bytes(), 0755); err != nil {
+		return errors.Wrap(err, "unable to create build script")
+	}
 	if cache {
 		if err := os.MkdirAll("cache/envoy", 0755); err != nil {
 			return errors.Wrap(err, "unable to create cache for envoy")
@@ -129,15 +138,19 @@ func Publish(verbose, dryRun, publish bool, imageTag, user string) error {
 	return nil
 }
 
-func generateFromTemplate(features []feature.Feature, filename string, t *template.Template) error {
+func generateFromTemplate(filename string, t *template.Template, data templateData) error {
 	f, err := os.Create(filename)
 	if err != nil {
 		return errors.Wrap(err, "unable to create file: "+filename)
 	}
 	defer f.Close()
-	err = t.Execute(f, features)
+	return fromTemplate(f, t, data)
+}
+
+func fromTemplate(w io.Writer, t *template.Template, data templateData) error {
+	err := t.Execute(w, data)
 	if err != nil {
-		return errors.Wrap(err, "unable to write file: "+filename)
+		return errors.Wrap(err, "unable to render template")
 	}
 	return nil
 }

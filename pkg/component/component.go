@@ -56,7 +56,8 @@ func init() {
 		Name: "envoy",
 		Builder: func(b BuilderConfig) {
 			if err := envoy.Build(b.Enabled, b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.EnvoyHash, b.Config.WorkDir, b.Config.EnvoyBuilderHash); err != nil {
+				b.Config.EnvoyHash, b.Config.EnvoyCommonHash, b.Config.EnvoyRepoUser, b.Config.WorkDir,
+				b.Config.EnvoyBuilderHash); err != nil {
 				fmt.Println(err)
 				return
 			}

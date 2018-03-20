@@ -2,10 +2,8 @@ package envoy
 
 import (
 	"fmt"
-	"html/template"
 	"strings"
-
-	"os"
+	"text/template"
 
 	"github.com/solo-io/thetool/pkg/common"
 	"github.com/solo-io/thetool/pkg/downloader"
@@ -41,7 +39,7 @@ fi
 cd /source
 mkdir -p prebuilt
 cd prebuilt
-curl -L -o BUILD https://raw.githubusercontent.com/` + envoyOrg() + `/envoy/%s/ci/prebuilt/BUILD
+curl -L -o BUILD https://raw.githubusercontent.com/{{ .EnvoyRepoUser }}/envoy/{{ .EnvoyHash }}/ci/prebuilt/BUILD
 ln -sf /thirdparty .
 ln -sf /thirdparty_build .
 cd /source
@@ -70,7 +68,7 @@ load(
 envoy_cc_binary(
     name = "envoy",
     repository = "@envoy",
-    deps = [{{range .}}
+    deps = [{{range .Features}}
 		"@{{.Name}}//:filter_lib",{{end}}
 		"@envoy//source/exe:envoy_main_entry_lib",
     ],
@@ -79,7 +77,7 @@ envoy_cc_binary(
 
 	workspaceContent = `workspace(name = "gloo")
 load('@bazel_tools//tools/build_defs/repo:git.bzl', 'git_repository')
-{{range .}}
+{{range .Features }}
 local_repository(
     name = "{{.Name}}",
     path = "{{. | path}}",
@@ -91,7 +89,7 @@ bind(
     actual = "//external:ssl",
 )
 
-ENVOY_COMMON_SHA = "efc95e928b9fd4137959ad5e9720586c898d2231"  # Mar 19, 2018 (functions: allow passthrough if htere is no function found on route)
+ENVOY_COMMON_SHA = "{{ .EnvoyCommonHash }}"  # Mar 19, 2018 (functions: allow passthrough if htere is no function found on route)
 
 # load solo common
 http_archive(
@@ -134,8 +132,8 @@ cc_library(
 
 http_archive(
     name = "envoy",
-    strip_prefix = "envoy-{{ envoyHash }}",
-    url = "https://github.com/{{ envoyOrg }}/envoy/archive/{{ envoyHash }}.zip",
+    strip_prefix = "envoy-{{ .EnvoyHash }}",
+    url = "https://github.com/{{ .EnvoyRepoUser }}/envoy/archive/{{ .EnvoyHash }}.zip",
 )
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
@@ -164,34 +162,29 @@ CMD /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster $CLUSTER --service
 )
 
 var (
-	buildTemplate     *template.Template
-	workspaceTemplate *template.Template
+	buildTemplate       *template.Template
+	workspaceTemplate   *template.Template
+	buildScriptTemplate *template.Template
 
-	envoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
-	workDir   = "repositories"
+	workDir = "repositories"
 )
 
-func envoyOrg() string {
-	if h := os.Getenv("ENVOY_ORG"); h != "" {
-		return h
-	}
-	return "envoyproxy"
+type templateData struct {
+	Features        []feature.Feature
+	EnvoyHash       string
+	EnvoyCommonHash string
+	EnvoyRepoUser   string
 }
 
 func init() {
 	buildTemplate = template.Must(template.New("build").Parse(buildContent))
 	funcMap := template.FuncMap{
 		"path": path,
-		"envoyHash": func() string {
-			if h := os.Getenv("ENVOY_HASH"); h != "" {
-				return h
-			}
-			return envoyHash
-		},
-		"envoyOrg": envoyOrg,
 	}
 	workspaceTemplate = template.Must(template.New("workspace").
 		Funcs(funcMap).Parse(workspaceContent))
+
+	buildScriptTemplate = template.Must(template.New("script").Parse(buildScript))
 }
 
 func path(f feature.Feature) string {

@@ -19,6 +19,8 @@ func ConfigureCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&conf.WorkDir, "work-dir", "w", "", "working directory")
 	flags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", "", "Envoy commit hash to use")
+	flags.StringVar(&conf.EnvoyRepoUser, "envoy-repo-user", "", "Envoy repository user")
+	flags.StringVar(&conf.EnvoyCommonHash, "envoy-common-hash", "", "Hash for Soloio Envoy Common")
 	flags.StringVarP(&conf.GlooHash, "gloo-hash", "g", "", "Gloo commit hash to use")
 	flags.StringVar(&conf.GlooRepo, "gloo-repo", "", "Gloo git repository")
 	flags.StringVarP(&conf.DockerUser, "user", "u", "", "default Docker user")
@@ -48,6 +50,12 @@ func runConfigure(c *config.Config) {
 	if c.EnvoyHash != "" {
 		existing.EnvoyHash = c.EnvoyHash
 	}
+	if c.EnvoyRepoUser != "" {
+		existing.EnvoyRepoUser = c.EnvoyRepoUser
+	}
+	if c.EnvoyCommonHash != "" {
+		existing.EnvoyCommonHash = c.EnvoyCommonHash
+	}
 	if c.GlooChartHash != "" {
 		existing.GlooChartHash = c.GlooChartHash
 	}
@@ -73,7 +81,9 @@ func show(c *config.Config) {
 	fmt.Printf("%-20s: %s\n", "Work Dir", c.WorkDir)
 	fmt.Printf("%-20s: %s\n", "Docker User", c.DockerUser)
 	fmt.Printf("%-20s: %s\n", "Envoy Builder Hash", c.EnvoyBuilderHash)
+	fmt.Printf("%-20s: %s\n", "Envoy Repo User", c.EnvoyRepoUser)
 	fmt.Printf("%-20s: %s\n", "Envoy Hash", c.EnvoyHash)
+	fmt.Printf("%-20s: %s\n", "Envoy Common Hash", c.EnvoyCommonHash)
 	fmt.Printf("%-20s: %s\n", "Gloo Chart Hash", c.GlooChartHash)
 	fmt.Printf("%-20s: %s\n", "Gloo Chart Repo", c.GlooChartRepo)
 	fmt.Printf("%-20s: %s\n", "Gloo Hash", c.GlooHash)

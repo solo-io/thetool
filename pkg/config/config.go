@@ -13,8 +13,13 @@ const (
 
 	// EnvoyHash is the commit hash of the version of Envoy used
 	EnvoyHash = "f79a62b7cc9ca55d20104379ee0576617630cdaa"
+	// EnvoyRepoUser - https://github.com/{EnvoyRepoUser}/envoy/
+	EnvoyRepoUser = "envoyproxy"
 	// EnvoyBuilderHash
 	EnvoyBuilderHash = "6153d9787cb894c2dd6b17a1539eaeba88ae15d79f66f63eec0f4713436d74f0"
+
+	// EnvoyCommonHash
+	EnvoyCommonHash = "efc95e928b9fd4137959ad5e9720586c898d2231"
 
 	// GlooHash is the commit hash of the version of Gloo used
 	GlooHash = "cf08737718cf62bf597f88aa2068c6f6b28b9992"
@@ -35,7 +40,9 @@ const (
 // Config contains the configuration used by thetool
 type Config struct {
 	WorkDir          string `json:"workDir"`
+	EnvoyRepoUser    string `json:"envoyRepoUser"`
 	EnvoyHash        string `json:"envoyHash"`
+	EnvoyCommonHash  string `jsno:"envoyCommonHash"`
 	EnvoyBuilderHash string `json:"envoyBuilderHash"`
 	GlooHash         string `json:"glooHash"`
 	GlooRepo         string `json:"glooRepo"`
