@@ -2,7 +2,9 @@ package addon
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/pkg/errors"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
@@ -40,60 +42,37 @@ func (e EnableDisable) configure(a *Addon) {
 	a.Enable = answer.Status == "enable"
 }
 
+const (
+	status     = "status"
+	disable    = "disable"
+	statsd     = "statsd"
+	prometheus = "prometheus"
+	all        = "all"
+)
+
 var (
 	metricsStatus = map[string]string{
-		"disable":    "disable",
-		"statsd":     "use existing statsd",
-		"prometheus": "use existing prometheus",
-		"all":        "install everything",
+		disable:    "disable",
+		statsd:     "use existing statsd",
+		prometheus: "use existing prometheus",
+		all:        "install everything",
 	}
 )
 
 type MetricsConfigurator struct{}
 
 func (m MetricsConfigurator) configure(a *Addon) {
-	defaultSelection, ok := metricsStatus[a.Configuration["status"]]
-	if !ok {
-		defaultSelection = "disable"
+	newStatus := askStatus(metricsStatus, a, []string{disable, statsd, prometheus, all})
+	a.Enable = newStatus != disable
+	a.Configuration[status] = newStatus
+	if newStatus == statsd {
+		askStatsdAddress(a)
 	}
-	var question = []*survey.Question{
-		{
-			Name: "status",
-			Prompt: &survey.Select{
-				Message: "Status for " + a.Name,
-				// for now not generating this from metricsStatus map to preserver order
-				Options: []string{"disable", "use existing statsd", "use existing prometheus", "install everything"},
-				Default: defaultSelection,
-			},
-			Validate: survey.Required,
-		},
-	}
-
-	answer := struct {
-		Status string
-	}{}
-
-	err := survey.Ask(question, &answer)
-	if err != nil {
-		fmt.Println("Unable to configure addon", a.Name, err)
-	}
-
-	a.Enable = answer.Status != "disable"
-	a.Configuration["status"] = selectionToStatus(answer.Status, metricsStatus)
-}
-
-func selectionToStatus(selection string, m map[string]string) string {
-	for k, v := range m {
-		if v == selection {
-			return k
-		}
-	}
-	return "disable"
 }
 
 var (
 	tracingStatus = map[string]string{
-		"disable":   "disable",
+		disable:     "disable",
 		"configure": "use existing jaeger",
 		"install":   "install jaeger",
 	}
@@ -102,31 +81,118 @@ var (
 type TracingConfigurator struct{}
 
 func (t TracingConfigurator) configure(a *Addon) {
-	defaultSelection, ok := tracingStatus[a.Configuration["status"]]
-	if !ok {
-		defaultSelection = "disable"
+	newStatus := askStatus(tracingStatus, a, []string{disable, "configure", "install"})
+	a.Enable = newStatus != disable
+	a.Configuration[status] = newStatus
+	if newStatus == "configure" {
+		askJaegerAddress(a)
 	}
-	var question = []*survey.Question{
+}
+
+func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
+	defaultSelection, ok := m[a.Configuration[status]]
+	if !ok {
+		defaultSelection = disable
+	}
+	options := make([]string, len(optionOrder))
+	for i, o := range optionOrder {
+		options[i] = m[o]
+	}
+
+	prompt := &survey.Select{
+		Message: "Status for " + a.Name,
+		Options: options,
+		Default: defaultSelection,
+	}
+
+	var answer string
+	err := survey.AskOne(prompt, &answer, survey.Required)
+	if err != nil {
+		fmt.Println("Unable to configure addon", a.Name, err)
+		return a.Configuration[status]
+	}
+
+	for k, v := range m {
+		if v == answer {
+			return k
+		}
+	}
+	return disable
+}
+
+func askStatsdAddress(a *Addon) {
+	var questions = []*survey.Question{
 		{
-			Name: "status",
-			Prompt: &survey.Select{
-				Message: "Status for " + a.Name,
-				Options: []string{"disable", "use existing jaeger", "install jaeger"},
-				Default: defaultSelection,
+			Name: "host",
+			Prompt: &survey.Input{
+				Message: "Please enter the host for Statsd server",
 			},
 			Validate: survey.Required,
 		},
+		{
+			Name: "port",
+			Prompt: &survey.Input{
+				Message: "Please enter the port for Statsd server",
+			},
+			Validate: validatePort,
+		},
 	}
 
-	answer := struct {
-		Status string
+	answers := struct {
+		Host string
+		Port int
 	}{}
 
-	err := survey.Ask(question, &answer)
+	err := survey.Ask(questions, &answers)
 	if err != nil {
-		fmt.Println("Unable to configure addon", a.Name, err)
+		fmt.Println("Unable to get statsd address", err)
+	}
+	a.Configuration["statsd_host"] = answers.Host
+	a.Configuration["statsd_port"] = strconv.Itoa(answers.Port)
+}
+
+func askJaegerAddress(a *Addon) {
+	var questions = []*survey.Question{
+		{
+			Name: "host",
+			Prompt: &survey.Input{
+				Message: "Please enter the host for Jaeger server",
+			},
+			Validate: survey.Required,
+		},
+		{
+			Name: "port",
+			Prompt: &survey.Input{
+				Message: "Please enter the port for Jaeger server",
+			},
+			Validate: validatePort,
+		},
 	}
 
-	a.Enable = answer.Status != "disable"
-	a.Configuration["status"] = selectionToStatus(answer.Status, tracingStatus)
+	answers := struct {
+		Host string
+		Port int
+	}{}
+
+	err := survey.Ask(questions, &answers)
+	if err != nil {
+		fmt.Println("Unable to get Jaeger address", err)
+	}
+	a.Configuration["jaeger_host"] = answers.Host
+	a.Configuration["jaeger_port"] = strconv.Itoa(answers.Port)
+}
+
+func validatePort(val interface{}) error {
+	if val == "" {
+		return errors.New("port can't be empty")
+	}
+
+	port, err := strconv.Atoi(val.(string))
+	if err != nil {
+		return errors.Wrap(err, "port needs to be a number")
+	}
+	if port < 0 || port > 65535 {
+		return errors.New("port not within a valid range")
+	}
+	return nil
 }
