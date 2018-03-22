@@ -71,7 +71,7 @@ func metricsAddon() *Addon {
 		Name:   name,
 		Enable: false,
 		Configuration: map[string]string{
-			"statsd-exporter": "prom/statsd-exporter:latest",
+			"statsd_exporter": "prom/statsd-exporter:latest",
 			"grafana":         "grafana/grafana:4.2.0",
 			"prometheus":      "quay.io/coreos/prometheus:latest",
 			"status":          "install",
