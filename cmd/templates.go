@@ -17,7 +17,6 @@ ingress:
   imagePullPolicy: IfNotPresent
 
 gloo:
-  type: NodePort
   replicaCount: 1
   port: 8081
   image: "{{ .GlooImage }}"
