@@ -67,6 +67,8 @@ func (m MetricsConfigurator) configure(a *Addon) {
 	a.Configuration[status] = newStatus
 	if newStatus == statsd {
 		askStatsdAddress(a)
+	} else if newStatus == prometheus || newStatus == all {
+		askMonitoringNamespace(a)
 	}
 }
 
@@ -118,6 +120,23 @@ func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
 		}
 	}
 	return disable
+}
+
+func askMonitoringNamespace(a *Addon) {
+	prompt := &survey.Input{
+		Message: "Please enter the namespace for monitoring services",
+		Default: "monitoring",
+	}
+	var answer string
+	err := survey.AskOne(prompt, &answer, survey.Required)
+	if err != nil {
+		fmt.Println("Unable to configure monitoring namespace. Using default namespace", a.Name, err)
+		answer = "monitoring"
+	}
+	if answer == "" {
+		answer = "monitoring"
+	}
+	a.Configuration["namespace"] = answer
 }
 
 func askStatsdAddress(a *Addon) {
