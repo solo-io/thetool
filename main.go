@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"time"
+
+	checkpoint "github.com/solo-io/go-checkpoint"
 	"github.com/solo-io/thetool/cmd"
 	"github.com/solo-io/thetool/cmd/addon"
 	"github.com/spf13/cobra"
@@ -9,6 +13,8 @@ import (
 var Version = "DEV"
 
 func main() {
+	start := time.Now()
+	defer telemetry(start)
 	rootCmd := &cobra.Command{
 		Use:     "thetool",
 		Short:   "Build Tool",
@@ -30,4 +36,16 @@ func main() {
 	rootCmd.AddCommand(addon.AddonCmd())
 
 	rootCmd.Execute()
+}
+
+func telemetry(t time.Time) {
+	ctx := context.Background()
+	report := &checkpoint.ReportParams{
+		Product:       "thetool",
+		Version:       Version,
+		StartTime:     t,
+		EndTime:       time.Now(),
+		SignatureFile: ".sig",
+	}
+	checkpoint.Report(ctx, report)
 }

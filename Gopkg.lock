@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-cleanhttp"
+  packages = ["."]
+  revision = "d5fe4b57a186c716b0e00b8c301cbd9b4182694d"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-uuid"
+  packages = ["."]
+  revision = "27454136f0364f2d44b1276c552d69105cf8c498"
+
+[[projects]]
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
@@ -32,6 +44,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/solo-io/go-checkpoint"
+  packages = ["."]
+  revision = "69104b1493dcf66693f3832c9641cc38631bc129"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "c6c44e6fdcc30161c7f4480754da7230d01c06e3"
@@ -46,13 +64,13 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "22ae77b79946ea320088417e4d50825671d82d57"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "932fb2287bee613f2a65e71685c9d9c0020da979"
+  revision = "378d26f46672a356c46195c28f61bdb4c0a781dd"
 
 [[projects]]
   name = "gopkg.in/AlecAivazis/survey.v1"
@@ -67,6 +85,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2a94cc88683ebb02871f3369bac213abca11069892478b2353802e90c527bc85"
+  inputs-digest = "27c765e837e664715074497524318f455c14716cddaec9e17b5eee6926f4ac1f"
   solver-name = "gps-cdcl"
   solver-version = 1
