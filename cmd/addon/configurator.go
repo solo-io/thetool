@@ -65,10 +65,16 @@ func (m MetricsConfigurator) configure(a *Addon) {
 	newStatus := askStatus(metricsStatus, a, []string{disable, statsd, prometheus, all})
 	a.Enable = newStatus != disable
 	a.Configuration[status] = newStatus
-	if newStatus == statsd {
+	switch newStatus {
+	case statsd:
 		askStatsdAddress(a)
-	} else if newStatus == prometheus || newStatus == all {
-		askMonitoringNamespace(a)
+	case prometheus:
+		askEnableServiceMonitor(a)
+		//askMonitoringNamespace(a)
+	case all:
+		a.Configuration["service_monitor"] = true
+		a.Configuration["prometheus_op"] = true
+		//askMonitoringNamespace(a)
 	}
 }
 
@@ -92,7 +98,7 @@ func (t TracingConfigurator) configure(a *Addon) {
 }
 
 func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
-	defaultSelection, ok := m[a.Configuration[status]]
+	defaultSelection, ok := m[a.Configuration[status].(string)]
 	if !ok {
 		defaultSelection = disable
 	}
@@ -111,7 +117,7 @@ func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
 	err := survey.AskOne(prompt, &answer, survey.Required)
 	if err != nil {
 		fmt.Println("Unable to configure addon", a.Name, err)
-		return a.Configuration[status]
+		return a.Configuration[status].(string)
 	}
 
 	for k, v := range m {
@@ -120,6 +126,25 @@ func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
 		}
 	}
 	return disable
+}
+
+func askEnableServiceMonitor(a *Addon) {
+	prompt := &survey.Select{
+		Message: "Setup service monitor with Prometheus Operator",
+		Options: []string{"yes", "no"},
+		Default: "no",
+	}
+	var answer string
+	err := survey.AskOne(prompt, &answer, survey.Required)
+	if err != nil {
+		answer = "no"
+	}
+
+	if "yes" == answer {
+		a.Configuration["service_monitor"] = true
+	} else {
+		a.Configuration["service_monitor"] = false
+	}
 }
 
 func askMonitoringNamespace(a *Addon) {

@@ -11,19 +11,21 @@ import (
 
 const (
 	addonFilename = "addons.json"
+	Metrics       = "metrics"
+	OpenTracing   = "opentracing"
 )
 
 type configurator interface {
 	configure(*Addon)
 }
 type Addon struct {
-	Name          string            `json:"name"`
-	Repository    string            `json:"repository,omitempty"`
-	Commit        string            `json:"commit,omitempty"`
-	Image         string            `json:"dockerImage,omitempty"`
-	Tag           string            `json:"dockerTag,omitempty"`
-	Enable        bool              `json:"enable"`
-	Configuration map[string]string `json:"configuration,omitempty"`
+	Name          string                 `json:"name"`
+	Repository    string                 `json:"repository,omitempty"`
+	Commit        string                 `json:"commit,omitempty"`
+	Image         string                 `json:"dockerImage,omitempty"`
+	Tag           string                 `json:"dockerTag,omitempty"`
+	Enable        bool                   `json:"enable"`
+	Configuration map[string]interface{} `json:"configuration,omitempty"`
 }
 
 var configuratorMap map[string]configurator = make(map[string]configurator)
@@ -52,29 +54,27 @@ func newGlooAddon(name, repo, hash string) *Addon {
 }
 
 func tracingAddon() *Addon {
-	name := "opentracing"
+	name := OpenTracing
 	configuratorMap[name] = TracingConfigurator{}
 	return &Addon{
 		Name:   name,
 		Enable: false,
-		Configuration: map[string]string{
+		Configuration: map[string]interface{}{
 			"jaeger": "jaegertracing/all-in-one:latest",
-			"status": "install",
+			"status": "disable",
 		},
 	}
 }
 
 func metricsAddon() *Addon {
-	name := "metrics"
+	name := Metrics
 	configuratorMap[name] = MetricsConfigurator{}
 	return &Addon{
 		Name:   name,
 		Enable: false,
-		Configuration: map[string]string{
+		Configuration: map[string]interface{}{
 			"statsd_exporter": "prom/statsd-exporter:latest",
-			"grafana":         "grafana/grafana:4.2.0",
-			"prometheus":      "quay.io/coreos/prometheus:latest",
-			"status":          "install",
+			"status":          "disable",
 		},
 	}
 }
@@ -107,7 +107,7 @@ func (s *Addon) String() string {
 	if s.Enable && s.Configuration != nil {
 		status, ok := s.Configuration["status"]
 		if ok {
-			fmt.Fprintf(b, "%-12s: %s\n", "Status", status)
+			fmt.Fprintf(b, "%-12s: %v\n", "Status", status)
 		}
 	}
 	return b.String()
@@ -119,6 +119,21 @@ func Init() error {
 
 func List() ([]*Addon, error) {
 	return load(addonFilename)
+}
+
+// Need a more generic solution
+func InstallPrometheus() bool {
+	addons, err := load(addonFilename)
+	if err != nil {
+		return false
+	}
+	for _, a := range addons {
+		if a.Name == Metrics {
+			status := a.Configuration["status"]
+			return "all" == status
+		}
+	}
+	return false
 }
 
 func addonNames() []string {

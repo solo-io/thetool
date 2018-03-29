@@ -31,10 +31,11 @@ var (
 )
 
 type k8sDeployOptions struct {
-	resume          bool
-	generateInstall bool
-	namespace       string
-	releaseName     string
+	resume            bool
+	generateInstall   bool
+	installPrometheus bool
+	namespace         string
+	releaseName       string
 }
 
 func DeployK8SCmd() *cobra.Command {
@@ -54,6 +55,7 @@ kubectl`,
 			dryRun, _ := f.GetBool("dry-run")
 			dockerUser, _ := f.GetString("docker-user")
 			imageTag, _ := f.GetString("image-tag")
+			options.installPrometheus = addon.InstallPrometheus()
 			if err := runDeployK8S(verbose, dryRun, dockerUser, imageTag, options); err != nil {
 				fmt.Printf("Unable to deploy Gloo: %q\n", err)
 			}
@@ -133,6 +135,21 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 			return errors.Wrapf(err, "unable to save %s", installFile)
 		}
 	} else {
+		// do we need to install prometheus?
+		if options.installPrometheus {
+			err = util.RunCmd(verbose, dryRun, "helm",
+				"repo", "add", "coreos", "https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/",
+			)
+			if err != nil {
+				return errors.Wrap(err, "unable to add repository for prometheus operator")
+			}
+			err = util.RunCmd(verbose, dryRun, "helm",
+				"install", "coreos/prometheus-operator", "--name", "prometheus-operator",
+				"--namespace", options.namespace)
+			if err != nil {
+				return errors.Wrap(err, "unable to install prometheus operator")
+			}
+		}
 		// bootstrap using kubectl
 		bootstrapArgs := []string{"apply", "-f", bootstrapFile}
 		err = util.RunCmd(verbose, dryRun, "kubectl", bootstrapArgs...)
