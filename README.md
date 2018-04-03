@@ -200,5 +200,5 @@ thetool update -r https://github.com/solo-io/gloo-plugins.git -c 282a844ea3ed252
 Updated repository https://github.com/solo-io/gloo-plugins.git to commit hash 282a844ea3ed2527f5044408c9c98bc7ee027cd2
 ```
 
-
-To learn more about writing your own gloo feature, please read the gloo documentation.
+For more information, read [Gloo documentation](https://gloo.solo.io/thetool/quickstart/)
+To learn more about writing your own gloo feature, please read [Building Custom Gloo](https://gloo.solo.io/thetool/custom/)
