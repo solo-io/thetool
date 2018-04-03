@@ -13,6 +13,10 @@ Automates custom builds and deployments of gloo and Envoy, simplifying the devel
 
 ## Installing
 ### Prerequisite
+`thetool` uses Git to checkout code. Please visit [download Git](https://git-scm.com/downloads)
+
+ > `thetool` uses [bash](https://www.gnu.org/software/bash/manual/html_node/What-is-Bash_003f.html) scripts. Please make sure it is on your PATH. On Windows, git installs a version of bash. For example, `bash.exe` is avialable in your Git install directory `C:\Program Files\Git\bin` 
+
 `thetool` uses Docker to run the build process and build Docker images. To install Docker, please
 visit [Install Docker](https://docs.docker.com/install/)
 
