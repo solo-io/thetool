@@ -14,18 +14,19 @@ var (
 
 set -ex
 
+mkdir -p $GOPATH/pkg/dep
 chmod 777 $GOPATH/pkg/dep
 
 ` + common.CreateUserTemplate("/gloo") + `
 ` + common.PrepareKeyTemplate + `
 
 
-if [ -f "/etc/github/id_rsa" ]; 
+if [ -f "/etc/github/id_rsa" ];
 then
   export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
-# create a script to run in su 
+# create a script to run in su
 cat << EOF > build_user.sh
 #!/bin/bash
 set -ex
@@ -43,8 +44,9 @@ ln -s /gloo/%s/gloo .
 cd gloo && pwd
 go get -u github.com/golang/dep/cmd/dep
 dep ensure -vendor-only
-GOOS=linux CGO_ENABLED=0 go build -o gloo
-cp gloo /gloo/gloo-out
+make clean
+make control-plane
+cp _output/control-plane /gloo/gloo-out
 
 EOF
 
@@ -67,7 +69,7 @@ import (
 {{end}}
 )`
 
-	installFile = "gloo/internal/install/install_plugins.go"
+	installFile = "gloo/internal/control-plane/install/install_plugins.go"
 
 	gopkg = `{{range $k, $v := .}}
 [[constraint]]

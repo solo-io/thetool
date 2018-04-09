@@ -43,7 +43,7 @@ func Build(enabled []feature.Feature, verbose, dryRun, cache bool, sshKeyFile, g
 
 	fmt.Println("Constraining plugins to given revisions...")
 	df := filepath.Join(workDir, dependencyFile)
-	if err := updateDep(plugins, df); err != nil {
+	if err := updateDep(plugins, df, glooRepo); err != nil {
 		return errors.Wrapf(err, "unable to update to dependencies file %s", df)
 	}
 	// let's build it all in Docker
@@ -86,7 +86,7 @@ func Publish(verbose, dryRun, publish bool, workDir, imageTag, user string) erro
 	fmt.Println("Publishing Gloo...")
 
 	if !dryRun {
-		if err := util.Copy(filepath.Join(workDir, "gloo", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
+		if err := util.Copy(filepath.Join(workDir, "gloo", "cmd", "control-plane", "Dockerfile"), filepath.Join("gloo-out", "Dockerfile")); err != nil {
 			return errors.Wrap(err, "not able to copy the Dockerfile")
 		}
 
@@ -99,7 +99,7 @@ func Publish(verbose, dryRun, publish bool, workDir, imageTag, user string) erro
 		}
 		defer os.Chdir(oldDir)
 	}
-	tag := user + "/gloo:" + imageTag
+	tag := user + "/control-plane:" + imageTag
 	buildArgs := []string{
 		"build",
 		"-t", tag, ".",
@@ -130,11 +130,13 @@ func installPlugins(packages []GlooPlugin, filename string, t *template.Template
 	return nil
 }
 
-func updateDep(plugins []GlooPlugin, filename string) error {
+func updateDep(plugins []GlooPlugin, filename, glooRepo string) error {
 	// get unique Repositories
 	repos := make(map[string]string)
 	for _, p := range plugins {
-		repos[getPackage(p.Repository)] = p.Revision
+		if p.Repository != glooRepo {
+			repos[getPackage(p.Repository)] = p.Revision
+		}
 	}
 	var w bytes.Buffer
 	if err := packageTemplate.Execute(&w, repos); err != nil {
