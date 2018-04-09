@@ -69,6 +69,10 @@ func (s *Addon) SafeName() string {
 	return replacer.Replace(s.Name)
 }
 
+func (s *Addon) IsGlooAddon() bool {
+	return s.Configuration != nil && s.Configuration["gloo"] == true
+}
+
 func (s *Addon) String() string {
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "%-12s: %s\n", "Name", s.Name)

@@ -16,20 +16,19 @@ ingress:
   imageTag: "{{ .EnvoyTag }}"
   imagePullPolicy: IfNotPresent
 
-gloo:
+control_plane:
   replicaCount: 1
   port: 8081
   image: "{{ .GlooImage }}"
   imageTag: "{{ .GlooTag }}"
   imagePullPolicy: IfNotPresent
 
-{{ $user := .DockerUser }}
+{{ $user := .DockerUser }} {{ $glooTag := .GlooTag }}
 #  add-ons {{ range .Addons }}
 {{.SafeName}}:
-  {{if .Repository }}image: "{{$user}}/{{.Name}}"
-  imageTag: "{{ .ImageTag }}"
-  {{end}}imagePullPolicy: IfNotPresent
-  enable: {{ .Enable}}{{range $k, $v := .Configuration }}
+  {{if .IsGlooAddon }}image: "{{$user}}/{{.Name}}"
+  imageTag: "{{$glooTag}}"
+  {{end}}imagePullPolicy: IfNotPresent{{range $k, $v := .Configuration }}
   {{$k}}: {{$v}}{{end}}
 {{end}}
 `
