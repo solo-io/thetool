@@ -10,15 +10,15 @@ var (
 	buildScript = `#!/bin/bash
 
 	set -ex
-	` + common.CreateUserTemplate("/code") + ` 	
+	` + common.CreateUserTemplate("/code") + `
 ` + common.PrepareKeyTemplate + `
 
-if [ -f "/etc/github/id_rsa" ]; 
+if [ -f "/etc/github/id_rsa" ];
 then
 	export GIT_SSH_COMMAND="ssh -i /etc/github/id_rsa -o 'StrictHostKeyChecking no'"
 fi
 
-# create a script to run in su 
+# create a script to run in su
 cat << EOF > build_user.sh
 #!/bin/bash
 set -ex
@@ -35,8 +35,9 @@ cd {{ .repoDir }}
 pwd
 go get -u github.com/golang/dep/cmd/dep
 dep ensure -vendor-only
-GOOS=linux CGO_ENABLED=0 go build -o {{ .repoDir }}
-cp {{ .repoDir }} /code/{{ .repoDir }}-out
+make clean
+make {{.name}}
+cp _output/{{.name}} /code/{{.name}}-out
 EOF
 
 chmod a+rx ./build_user.sh
