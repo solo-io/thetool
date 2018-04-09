@@ -96,13 +96,13 @@ func init() {
 				Name: srv.Name,
 				Builder: func(b BuilderConfig) {
 					if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-						b.Config.GlooRepo, b.Config.GlooHash, config.WorkDir); err != nil {
+						srv.Name, b.Config.GlooRepo, b.Config.GlooHash, config.WorkDir); err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
-						b.Config.GlooRepo, config.WorkDir, b.Config.GlooHash, b.DockerUser); err != nil {
+					if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage, srv.Name,
+						b.Config.GlooRepo, config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
 						fmt.Println(err)
 						return
 					}
@@ -118,13 +118,18 @@ func isGlooAddon(a *addon.Addon) bool {
 	return exists // only gloo addons have this key
 }
 
-func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir string) error {
-	name := downloader.RepoDir(repo)
+// only for gloo addons from solo
+func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, name, repo, hash, workDir string) error {
 	fmt.Printf("Building %s...\n", name)
 	scriptFilename := fmt.Sprintf("build-%s.sh", name)
-	generateBuildScript(scriptFilename, workDir, repo)
-	if err := downloader.Download(repo, hash, workDir, verbose); err != nil {
-		return errors.Wrapf(err, "unable to download %s repository", name)
+	generateBuildScript(scriptFilename, workDir, name, repo)
+
+	// download only if necessary
+	repoDir := filepath.Join(workDir, downloader.RepoDir(repo))
+	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
+		if err := downloader.Download(repo, hash, workDir, verbose); err != nil {
+			return errors.Wrapf(err, "unable to download %s repository", name)
+		}
 	}
 	if !dryRun {
 		if useCache {
@@ -160,11 +165,11 @@ func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir s
 	return nil
 }
 
-func publishRepo(verbose, dryRun, publish bool, repo, workDir, imageTag, dockerUser string) error {
-	name := downloader.RepoDir(repo)
+func publishRepo(verbose, dryRun, publish bool, name, repo, workDir, imageTag, dockerUser string) error {
 	fmt.Printf("Publishing %s...\n", name)
 
-	if err := util.Copy(filepath.Join(workDir, name, "Dockerfile"),
+	repoDir := downloader.RepoDir(repo)
+	if err := util.Copy(filepath.Join(workDir, repoDir, "cmd", name, "Dockerfile"),
 		filepath.Join(name+"-out", "Dockerfile")); err != nil {
 		return errors.Wrap(err, "unable to copy the Dockerfile")
 	}
@@ -195,7 +200,7 @@ func publishRepo(verbose, dryRun, publish bool, repo, workDir, imageTag, dockerU
 	return nil
 }
 
-func generateBuildScript(filename, workDir, repoURL string) error {
+func generateBuildScript(filename, workDir, name, repoURL string) error {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return errors.Wrap(err, "unable to create file: "+filename)
@@ -204,6 +209,7 @@ func generateBuildScript(filename, workDir, repoURL string) error {
 	err = buildSriptTemplate.Execute(f, map[string]string{
 		"repoParent": repoParent(repoURL),
 		"repoDir":    downloader.RepoDir(repoURL),
+		"name":       name,
 		"workDir":    workDir,
 	})
 	if err != nil {
