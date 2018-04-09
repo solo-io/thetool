@@ -12,11 +12,16 @@ type EnableDisable struct {
 }
 
 func (e EnableDisable) configure(a *Addon) {
-	var defaultSelection string
-	if a.Enable {
-		defaultSelection = "enable"
-	} else {
-		defaultSelection = "disable"
+	defaultSelection := "enable"
+	if a.Configuration != nil {
+		v, ok := a.Configuration["enable"]
+		if ok {
+			if v.(bool) {
+				defaultSelection = "enable"
+			} else {
+				defaultSelection = "disable"
+			}
+		}
 	}
 	var question = []*survey.Question{
 		{
@@ -39,7 +44,10 @@ func (e EnableDisable) configure(a *Addon) {
 		fmt.Println("Unable to configure addon", a.Name, err)
 	}
 
-	a.Enable = answer.Status == "enable"
+	if a.Configuration == nil {
+		a.Configuration = make(map[string]interface{})
+	}
+	a.Configuration["enable"] = answer.Status == "enable"
 }
 
 const (
@@ -63,7 +71,6 @@ type MetricsConfigurator struct{}
 
 func (m MetricsConfigurator) configure(a *Addon) {
 	newStatus := askStatus(metricsStatus, a, []string{disable, statsd, prometheus, all})
-	a.Enable = newStatus != disable
 	a.Configuration[status] = newStatus
 	switch newStatus {
 	case statsd:
@@ -90,7 +97,6 @@ type TracingConfigurator struct{}
 
 func (t TracingConfigurator) configure(a *Addon) {
 	newStatus := askStatus(tracingStatus, a, []string{disable, "configure", "install"})
-	a.Enable = newStatus != disable
 	a.Configuration[status] = newStatus
 	if newStatus == "configure" {
 		askJaegerAddress(a)

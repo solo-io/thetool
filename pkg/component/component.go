@@ -56,7 +56,7 @@ func init() {
 		Name: "envoy",
 		Builder: func(b BuilderConfig) {
 			if err := envoy.Build(b.Enabled, b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.EnvoyHash, b.Config.EnvoyCommonHash, b.Config.EnvoyRepoUser, b.Config.WorkDir,
+				b.Config.EnvoyHash, b.Config.EnvoyCommonHash, b.Config.EnvoyRepoUser, config.WorkDir,
 				b.Config.EnvoyBuilderHash); err != nil {
 				fmt.Println(err)
 				return
@@ -72,13 +72,13 @@ func init() {
 		Name: "gloo",
 		Builder: func(b BuilderConfig) {
 			if err := gloo.Build(b.Enabled, b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-				b.Config.GlooRepo, b.Config.GlooHash, b.Config.WorkDir); err != nil {
+				b.Config.GlooRepo, b.Config.GlooHash, config.WorkDir); err != nil {
 				fmt.Println(err)
 				return
 			}
 
 			if err := gloo.Publish(b.Verbose, b.DryRun, b.PublishImage,
-				b.Config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
+				config.WorkDir, b.ImageTag, b.DockerUser); err != nil {
 				fmt.Println(err)
 			}
 		},
@@ -91,18 +91,18 @@ func init() {
 	}
 	for _, a := range addons {
 		srv := a // necessary for the way pointers work
-		if srv.Repository != "" && srv.Commit != "" {
+		if isGlooAddon(srv) {
 			builder := Builder{
 				Name: srv.Name,
 				Builder: func(b BuilderConfig) {
 					if err := buildRepo(b.Verbose, b.DryRun, b.UseCache, b.SSHKeyFile,
-						srv.Repository, srv.Commit, b.Config.WorkDir); err != nil {
+						b.Config.GlooRepo, b.Config.GlooHash, config.WorkDir); err != nil {
 						fmt.Println(err)
 						return
 					}
 
 					if err := publishRepo(b.Verbose, b.DryRun, b.PublishImage,
-						srv.Repository, b.Config.WorkDir, srv.ImageTag(), b.DockerUser); err != nil {
+						b.Config.GlooRepo, config.WorkDir, b.Config.GlooHash, b.DockerUser); err != nil {
 						fmt.Println(err)
 						return
 					}
@@ -111,6 +111,11 @@ func init() {
 			Builders = append(Builders, builder)
 		}
 	}
+}
+
+func isGlooAddon(a *addon.Addon) bool {
+	_, exists := a.Configuration["gloo"]
+	return exists // only gloo addons have this key
 }
 
 func buildRepo(verbose, dryRun, useCache bool, sshKeyFile, repo, hash, workDir string) error {

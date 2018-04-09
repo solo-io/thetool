@@ -84,11 +84,14 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 		return fmt.Errorf("can't use generate-install and resume at the same time")
 	}
 
-	fmt.Printf("Downloading Gloo chart from %s\n", conf.GlooChartRepo)
-	if err := downloader.Download(conf.GlooChartRepo, conf.GlooChartHash, conf.WorkDir, verbose); err != nil {
-		return errors.Wrap(err, "unable to download Gloo chart")
+	if !glooDownloaded(conf.GlooRepo) {
+		fmt.Printf("Downloading Gloo from %s\n", conf.GlooRepo)
+		if err := downloader.Download(conf.GlooRepo, conf.GlooHash, config.WorkDir, verbose); err != nil {
+			return errors.Wrap(err, "unable to download Gloo")
+		}
 	}
-	templateFile := filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo), "helm", "bootstrap.yaml")
+	helmDir := filepath.Join(config.WorkDir, downloader.RepoDir(conf.GlooRepo), "install", "helm")
+	templateFile := filepath.Join(helmDir, "bootstrap.yaml")
 	if !options.resume {
 		enabled, err := loadEnabledFeatures()
 		if err != nil {
@@ -107,7 +110,7 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 		}
 	}
 
-	glooChartDir := filepath.Join(conf.WorkDir, downloader.RepoDir(conf.GlooChartRepo), "helm", "gloo")
+	glooChartDir := filepath.Join(helmDir, "gloo")
 	if options.generateInstall {
 		// use helm to generate final yaml
 		helmArgs := []string{"template", glooChartDir, "-f", glooChartYaml}
@@ -167,6 +170,12 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 	}
 
 	return nil
+}
+
+func glooDownloaded(glooRepo string) bool {
+	glooDir := filepath.Join(config.WorkDir, downloader.RepoDir(glooRepo))
+	_, err := os.Stat(glooDir)
+	return err == nil
 }
 
 func generateHelmValues(verbose bool, imageTag, user string) error {
