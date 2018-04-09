@@ -13,8 +13,9 @@ const (
 )
 
 type Repository struct {
-	URL    string `json:"url"`
-	Commit string `json:"commit"`
+	URL      string `json:"url"`
+	Commit   string `json:"commit"`
+	Manifest string `json:"manifest"`
 }
 
 type RepositoryStore interface {
@@ -100,13 +101,4 @@ type repoFile struct {
 	Date        time.Time    `json:"date"`
 	GeneratedBy string       `json:"generatedBy"`
 	Repos       []Repository `json:"repositories"`
-}
-
-func ListDefaultRepos() []Repository {
-	return []Repository{
-		Repository{
-			URL:    "https://github.com/solo-io/gloo-plugins.git",
-			Commit: "282a844ea3ed2527f5044408c9c98bc7ee027cd2",
-		},
-	}
 }

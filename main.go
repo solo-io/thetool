@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Version = "DEV"
+var Version = "unknown"
 
 func main() {
 	start := time.Now()

@@ -17,6 +17,7 @@ import (
 func AddCmd() *cobra.Command {
 	var repoURL string
 	var commitHash string
+	var manifest string
 	var verbose bool
 
 	cmd := &cobra.Command{
@@ -25,7 +26,7 @@ func AddCmd() *cobra.Command {
 		Short:   "add or update a Gloo feature repository",
 		Long:    "add or update a Gloo feature repository and all the features in the repository",
 		Run: func(c *cobra.Command, args []string) {
-			err := runAdd(verbose, repoURL, commitHash)
+			err := runAdd(verbose, repoURL, commitHash, manifest)
 			if err != nil {
 				fmt.Println("unable to add/update the repository", err)
 			}
@@ -35,6 +36,7 @@ func AddCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&repoURL, "repository", "r", "", "repository URL")
 	flags.StringVarP(&commitHash, "commit", "c", "", "commit hash")
+	flags.StringVarP(&commitHash, "manifest", "m", feature.FeaturesFileName, "manifest file describe the Gloo features in the repository")
 	flags.BoolVarP(&verbose, "verbose", "v", false, "verbose logging")
 
 	cmd.MarkFlagRequired("repository")
@@ -43,23 +45,18 @@ func AddCmd() *cobra.Command {
 	return cmd
 }
 
-func runAdd(verbose bool, repo, hash string) error {
+func runAdd(verbose bool, repo, hash, manifest string) error {
 	repoStore := &feature.FileRepoStore{Filename: feature.ReposFileName}
 	if !downloader.SupportedURL(repo) {
 		return fmt.Errorf("unsupported repository URL %s\nShould either end in '.git' or be HTTP/HTTPS", repo)
 	}
 
-	conf, err := config.Load(config.ConfigFile)
-	if err != nil {
-		return errors.Wrapf(err, "unable to load configuration from %s", config.ConfigFile)
-	}
-
-	err = downloader.Download(repo, hash, conf.WorkDir, verbose)
+	err := downloader.Download(repo, hash, config.WorkDir, verbose)
 	if err != nil {
 		return errors.Wrapf(err, "unable to download repository %s", repo, err)
 	}
 
-	mf, err := feature.LoadManifest(filepath.Join(conf.WorkDir, downloader.RepoDir(repo)))
+	mf, err := feature.LoadManifest(filepath.Join(config.WorkDir, downloader.RepoDir(repo), manifest))
 	if err != nil {
 		return errors.Wrapf(err, "unable to load features manifest for repository %s", repo)
 	}

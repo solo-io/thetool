@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"time"
 )
 
@@ -21,8 +20,8 @@ type ManifestFeature struct {
 	Tags     []string `json:"tags,omitempty"`
 }
 
-func LoadManifest(folder string) ([]ManifestFeature, error) {
-	b, err := ioutil.ReadFile(filepath.Join(folder, "features.json"))
+func LoadManifest(filename string) ([]ManifestFeature, error) {
+	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

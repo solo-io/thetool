@@ -19,17 +19,12 @@ const (
 	EnvoyBuilderHash = "6153d9787cb894c2dd6b17a1539eaeba88ae15d79f66f63eec0f4713436d74f0"
 
 	// EnvoyCommonHash
-	EnvoyCommonHash = "efc95e928b9fd4137959ad5e9720586c898d2231"
+	EnvoyCommonHash = "771b89c20a7a6f8edf3ebe3df2358f0e07e7edcd"
 
 	// GlooHash is the commit hash of the version of Gloo used
-	GlooHash = "cf08737718cf62bf597f88aa2068c6f6b28b9992"
+	GlooHash = "9147a6fffda90433e2cc3801203a3fe566e50e28"
 	// GlooRepo is the repository URL for Gloo
 	GlooRepo = "https://github.com/solo-io/gloo.git"
-
-	//GlooChartHash is the commit hash of the Gloo chart used
-	GlooChartHash = "5f1df1f2364ab795c65a629c3efbb00f3acf9676"
-	//GlooChartRepo is the repository URL for Gloo chart
-	GlooChartRepo = "https://github.com/solo-io/gloo-install.git"
 
 	// DockerUser is the default Docker registry user used for publishing the images
 	DockerUser = "soloio"
@@ -39,15 +34,12 @@ const (
 
 // Config contains the configuration used by thetool
 type Config struct {
-	WorkDir          string `json:"workDir"`
 	EnvoyRepoUser    string `json:"envoyRepoUser"`
 	EnvoyHash        string `json:"envoyHash"`
 	EnvoyCommonHash  string `jsno:"envoyCommonHash"`
 	EnvoyBuilderHash string `json:"envoyBuilderHash"`
 	GlooHash         string `json:"glooHash"`
 	GlooRepo         string `json:"glooRepo"`
-	GlooChartHash    string `json:"glooChartHash"`
-	GlooChartRepo    string `json:"glooChartRepo"`
 	DockerUser       string `json:"dockerUser,omitempty"`
 }
 

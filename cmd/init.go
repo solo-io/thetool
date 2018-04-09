@@ -25,7 +25,6 @@ func InitCmd() *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.BoolVarP(&verbose, "verbose", "v", false, "enable verbose logging")
-	flags.StringVarP(&conf.WorkDir, "work-dir", "w", config.WorkDir, "working directory")
 	flags.StringVar(&conf.EnvoyRepoUser, "envoy-repo-user", config.EnvoyRepoUser, "Envoy repository user")
 	flags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", config.EnvoyHash, "Envoy commit hash to use")
 	flags.StringVar(&conf.EnvoyCommonHash, "envoy-common-hash", config.EnvoyCommonHash, "Hash for Soloio Envoy Common")
@@ -47,18 +46,16 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 
 	// Let's save the configuration file that aren't changed via CLI args
 	conf.EnvoyBuilderHash = config.EnvoyBuilderHash
-	conf.GlooChartRepo = config.GlooChartRepo
-	conf.GlooChartHash = config.GlooChartHash
 
 	if err := conf.Save(config.ConfigFile); err != nil {
 		fmt.Printf("unable to save the configuration to %s: %q\n", config.ConfigFile, err)
 		return
 	}
 	// create directory for external feature repositories
-	if _, err := os.Stat(conf.WorkDir); os.IsNotExist(err) {
-		err = os.Mkdir(conf.WorkDir, 0755)
+	if _, err := os.Stat(config.WorkDir); os.IsNotExist(err) {
+		err = os.Mkdir(config.WorkDir, 0755)
 		if err != nil {
-			fmt.Printf("Unable to create repository directory %s: %q\n", conf.WorkDir, err)
+			fmt.Printf("Unable to create repository directory %s: %q\n", config.WorkDir, err)
 			return
 		}
 	}
@@ -81,13 +78,10 @@ func runInit(verbose, noDefaults bool, conf config.Config) {
 	}
 	if !noDefaults {
 		fmt.Println("Adding default repositories...")
-		// get list of available repositories
-		repos := feature.ListDefaultRepos()
-		for _, r := range repos {
-			if err := runAdd(verbose, r.URL, r.Commit); err != nil {
-				fmt.Printf("Error setting up default repository %s: %q\n", r.URL, err)
-				return
-			}
+		// add the plugins in Gloo as default features
+		if err := runAdd(verbose, conf.GlooRepo, conf.GlooHash, "pkg/plugins/features.json"); err != nil {
+			fmt.Printf("Error setting up default features: %q\n", err)
+			return
 		}
 	}
 	fmt.Println("Initialized.")

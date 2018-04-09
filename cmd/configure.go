@@ -17,15 +17,12 @@ func ConfigureCmd() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&conf.WorkDir, "work-dir", "w", "", "working directory")
 	flags.StringVarP(&conf.EnvoyHash, "envoy-hash", "e", "", "Envoy commit hash to use")
 	flags.StringVar(&conf.EnvoyRepoUser, "envoy-repo-user", "", "Envoy repository user")
 	flags.StringVar(&conf.EnvoyCommonHash, "envoy-common-hash", "", "Hash for Soloio Envoy Common")
 	flags.StringVarP(&conf.GlooHash, "gloo-hash", "g", "", "Gloo commit hash to use")
 	flags.StringVar(&conf.GlooRepo, "gloo-repo", "", "Gloo git repository")
 	flags.StringVarP(&conf.DockerUser, "user", "u", "", "default Docker user")
-	flags.StringVar(&conf.GlooChartRepo, "gloo-chart-repo", "", "repository for Gloo chart")
-	flags.StringVar(&conf.GlooChartHash, "gloo-chart-hash", "", "commit hash for Gloo chart")
 	flags.StringVar(&conf.EnvoyBuilderHash, "envoy-builder-hash", "", "hash for envoy build container")
 
 	return cmd
@@ -38,9 +35,6 @@ func runConfigure(c *config.Config) {
 		return
 	}
 
-	if c.WorkDir != "" {
-		existing.WorkDir = c.WorkDir
-	}
 	if c.DockerUser != "" {
 		existing.DockerUser = c.DockerUser
 	}
@@ -55,12 +49,6 @@ func runConfigure(c *config.Config) {
 	}
 	if c.EnvoyCommonHash != "" {
 		existing.EnvoyCommonHash = c.EnvoyCommonHash
-	}
-	if c.GlooChartHash != "" {
-		existing.GlooChartHash = c.GlooChartHash
-	}
-	if c.GlooChartRepo != "" {
-		existing.GlooChartRepo = c.GlooChartRepo
 	}
 	if c.GlooHash != "" {
 		existing.GlooHash = c.GlooHash
@@ -78,14 +66,11 @@ func runConfigure(c *config.Config) {
 }
 
 func show(c *config.Config) {
-	fmt.Printf("%-20s: %s\n", "Work Dir", c.WorkDir)
 	fmt.Printf("%-20s: %s\n", "Docker User", c.DockerUser)
 	fmt.Printf("%-20s: %s\n", "Envoy Builder Hash", c.EnvoyBuilderHash)
 	fmt.Printf("%-20s: %s\n", "Envoy Repo User", c.EnvoyRepoUser)
 	fmt.Printf("%-20s: %s\n", "Envoy Hash", c.EnvoyHash)
 	fmt.Printf("%-20s: %s\n", "Envoy Common Hash", c.EnvoyCommonHash)
-	fmt.Printf("%-20s: %s\n", "Gloo Chart Hash", c.GlooChartHash)
-	fmt.Printf("%-20s: %s\n", "Gloo Chart Repo", c.GlooChartRepo)
 	fmt.Printf("%-20s: %s\n", "Gloo Hash", c.GlooHash)
 	fmt.Printf("%-20s: %s\n", "Gloo Repo", c.GlooRepo)
 }
