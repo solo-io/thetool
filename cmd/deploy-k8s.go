@@ -97,7 +97,7 @@ func runDeployK8S(verbose, dryRun bool, dockerUser, imageTag string, options k8s
 		if err != nil {
 			return errors.Wrap(err, "unable to get enabled features")
 		}
-		fmt.Printf("Building with %d features\n", len(enabled))
+		fmt.Printf("Deploying with %d features\n", len(enabled))
 		if imageTag == "" {
 			imageTag = featuresHash(enabled)
 		}
@@ -194,7 +194,7 @@ func generateHelmValues(verbose bool, imageTag, user string) error {
 	err = helmValuesTemplate.Execute(f, map[string]interface{}{
 		"EnvoyImage": user + "/envoy",
 		"EnvoyTag":   imageTag,
-		"GlooImage":  user + "/gloo",
+		"GlooImage":  user + "/control-plane",
 		"GlooTag":    imageTag,
 		"DockerUser": user,
 		"Addons":     addons,
