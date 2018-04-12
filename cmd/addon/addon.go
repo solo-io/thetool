@@ -13,6 +13,11 @@ const (
 	addonFilename = "addons.json"
 	Metrics       = "metrics"
 	OpenTracing   = "opentracing"
+
+	// configuration keys
+	keyStatus = "status"
+	keyEnable = "enable"
+	keyGloo   = "gloo"
 )
 
 type configurator interface {
@@ -36,7 +41,7 @@ func newGlooAddon(name string) *Addon {
 	configuratorMap[name] = EnableDisable{}
 	return &Addon{
 		Name:          name,
-		Configuration: map[string]interface{}{"enable": true, "gloo": true},
+		Configuration: map[string]interface{}{keyEnable: true, keyGloo: true},
 	}
 }
 
@@ -46,8 +51,8 @@ func tracingAddon() *Addon {
 	return &Addon{
 		Name: name,
 		Configuration: map[string]interface{}{
-			"jaeger": "jaegertracing/all-in-one:latest",
-			"status": "disable",
+			"jaeger":  "jaegertracing/all-in-one:latest",
+			keyStatus: "disable",
 		},
 	}
 }
@@ -59,7 +64,7 @@ func metricsAddon() *Addon {
 		Name: name,
 		Configuration: map[string]interface{}{
 			"statsd_exporter": "prom/statsd-exporter:latest",
-			"status":          "disable",
+			keyStatus:         "disable",
 		},
 	}
 }
@@ -70,19 +75,19 @@ func (s *Addon) SafeName() string {
 }
 
 func (s *Addon) IsGlooAddon() bool {
-	return s.Configuration != nil && s.Configuration["gloo"] == true
+	return s.Configuration != nil && s.Configuration[keyGloo] == true
 }
 
 func (s *Addon) String() string {
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "%-12s: %s\n", "Name", s.Name)
 	if s.Configuration != nil {
-		status, ok := s.Configuration["status"]
+		status, ok := s.Configuration[keyStatus]
 		if ok {
 			fmt.Fprintf(b, "%-12s: %v\n", "Status", status)
 		}
 
-		enabled, ok := s.Configuration["enable"]
+		enabled, ok := s.Configuration[keyEnable]
 		if ok {
 			fmt.Fprintf(b, "%-12s: %v\n", "Enable", enabled)
 		}
@@ -106,7 +111,7 @@ func InstallPrometheus() bool {
 	}
 	for _, a := range addons {
 		if a.Name == Metrics {
-			status := a.Configuration["status"]
+			status := a.Configuration[keyStatus]
 			return "all" == status
 		}
 	}
