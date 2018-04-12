@@ -8,18 +8,23 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
+const (
+	statusEnable  = "enable"
+	statusDisable = "disable"
+)
+
 type EnableDisable struct {
 }
 
 func (e EnableDisable) configure(a *Addon) {
-	defaultSelection := "enable"
+	defaultSelection := statusEnable
 	if a.Configuration != nil {
-		v, ok := a.Configuration["enable"]
+		v, ok := a.Configuration[keyEnable]
 		if ok {
 			if v.(bool) {
-				defaultSelection = "enable"
+				defaultSelection = statusEnable
 			} else {
-				defaultSelection = "disable"
+				defaultSelection = statusDisable
 			}
 		}
 	}
@@ -28,7 +33,7 @@ func (e EnableDisable) configure(a *Addon) {
 			Name: "status",
 			Prompt: &survey.Select{
 				Message: "Enable addon status for " + a.Name,
-				Options: []string{"enable", "disable"},
+				Options: []string{statusEnable, statusDisable},
 				Default: defaultSelection,
 			},
 			Validate: survey.Required,
@@ -47,11 +52,10 @@ func (e EnableDisable) configure(a *Addon) {
 	if a.Configuration == nil {
 		a.Configuration = make(map[string]interface{})
 	}
-	a.Configuration["enable"] = answer.Status == "enable"
+	a.Configuration[keyEnable] = answer.Status == statusEnable
 }
 
 const (
-	status     = "status"
 	disable    = "disable"
 	statsd     = "statsd"
 	prometheus = "prometheus"
@@ -71,7 +75,7 @@ type MetricsConfigurator struct{}
 
 func (m MetricsConfigurator) configure(a *Addon) {
 	newStatus := askStatus(metricsStatus, a, []string{disable, statsd, prometheus, all})
-	a.Configuration[status] = newStatus
+	a.Configuration[keyStatus] = newStatus
 	switch newStatus {
 	case statsd:
 		askStatsdAddress(a)
@@ -97,14 +101,14 @@ type TracingConfigurator struct{}
 
 func (t TracingConfigurator) configure(a *Addon) {
 	newStatus := askStatus(tracingStatus, a, []string{disable, "configure", "install"})
-	a.Configuration[status] = newStatus
+	a.Configuration[keyStatus] = newStatus
 	if newStatus == "configure" {
 		askJaegerAddress(a)
 	}
 }
 
 func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
-	defaultSelection, ok := m[a.Configuration[status].(string)]
+	defaultSelection, ok := m[a.Configuration[keyStatus].(string)]
 	if !ok {
 		defaultSelection = disable
 	}
@@ -123,7 +127,7 @@ func askStatus(m map[string]string, a *Addon, optionOrder []string) string {
 	err := survey.AskOne(prompt, &answer, survey.Required)
 	if err != nil {
 		fmt.Println("Unable to configure addon", a.Name, err)
-		return a.Configuration[status].(string)
+		return a.Configuration[keyStatus].(string)
 	}
 
 	for k, v := range m {
